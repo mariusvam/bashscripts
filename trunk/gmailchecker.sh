@@ -1,9 +1,11 @@
 #!/bin/bash
+#author: trile7 at gmail dot com
+#dependencies: yad, openssl, imagemagick, curl, alsa-utils (to play sound)
 
 function createrc(){
   [[ $# -eq 0 ]] && readrc -once
   oIFS=$IFS; IFS='|'
-  x=(`yad --name gmailchecker --window-icon "${x[2]}" --center --text "<b>gmail account information:</b>" --form --field "<i>username (required)</i>" "${x[0]}" --field "<i>password (required)</i>":H "${x[1]}" --field "<i>icon fullpath (required)</i>" "${x[2]}" --field "check frequency (s)":NUM "${x[3]:=120}!1..3600" --field "open link command (browser)" "${x[4]:=xdg-open}" --field "run when icon is clicked" "${x[5]}" --field "sound WAV fullpath" "${x[6]}" --field "play sound on new mail":CHK "${x[7]:=TRUE}"`) || exit
+  x=(`yad --title gmailchecker --window-icon "${x[2]}" --center --text "<b>gmail account information:</b>" --form --field "<i>username (required)</i>" "${x[0]}" --field "<i>password (required)</i>":H "${x[1]}" --field "<i>icon fullpath (required)</i>" "${x[2]}" --field "check frequency (s)":NUM "${x[3]:=120}!1..3600" --field "open link command (browser)" "${x[4]:=xdg-open}" --field "run when icon is clicked" "${x[5]}" --field "sound WAV fullpath" "${x[6]}" --field "play sound on new mail":CHK "${x[7]:=TRUE}"`) || exit
   IFS=$oIFS
   rm "$rc"
   [[ ${x[1]} ]] && x[1]=`echo ${x[1]} | openssl enc -base64`
@@ -20,7 +22,7 @@ function readrc(){
   done < "$rc"
   [[ ${x[1]} ]] && x[1]=`echo ${x[1]} | openssl enc -base64 -d`
   if [[ -z ${x[0]} ]] || [[ -z ${x[1]} ]] || [[ ! -e ${x[2]} ]]; then
-    [[ $# -eq 0 ]] && (yad --center --name gmailchecker --window-icon "${x[2]}" --button gtk-ok:0 --text "make sure username and password fields are filled, and icon fullpath exists."; createrc -missinginfo)
+    [[ $# -eq 0 ]] && (yad --center --title gmailchecker --window-icon "${x[2]}" --button gtk-ok:0 --text "make sure username and password fields are filled, and icon fullpath exists."; createrc -missinginfo)
   fi
   }
 
@@ -30,7 +32,7 @@ function checkmail(){
   if which curl; then
     curl -su ${x[0]}:${x[1]} https://mail.google.com/mail/feed/atom | grep title | sed "s/<title>//" | sed "s/<\/title>//" > $tmp
   else
-    wget -q --secure-protocol=TLSv1 --no-check-certificate --user=${x[0]} --password=${x[1]} https://mail.google.com/mail/feed/atom -O - | grep title | sed "s/<title>//" | sed "s/<\/title>//" > $tmp
+    wget -q --secure-protocol=TLSv1 --no-check-certificate --user=trile7 --password=chels120 https://mail.google.com/mail/feed/atom -O - | grep title | sed "s/<title>//" | sed "s/<\/title>//" > $tmp
   fi
   oIFS=$IFS; IFS=$'\n'
   m=(`cat $tmp`)
@@ -89,13 +91,13 @@ esac
 [[ -e $pid ]] && (kill `cat $pid`; sleep 1)
 [[ -e $pipe ]] || mkfifo $pipe
 exec 4<> $pipe
-if ! ps -C yad -f | grep -q gmail.*notification; then
-  yad --kill-parent --text gmailchecker --notification --command "" --listen <&4 &
-fi
-sleep 1
 trap on_exit EXIT
 echo $$ > $pid
 while true; do
+  if ! ps -C yad -f | grep -q gmail.*notification; then
+    yad --kill-parent --text gmailchecker --notification --listen <&4 &
+    sleep 1
+  fi
   checkmail
   sleep ${x[3]}
 done
