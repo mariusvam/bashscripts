@@ -1,9 +1,10 @@
 #!/bin/bash
 # author: trile7 at gmail dot com
 
-trashcan="$HOME/.local/share/Trash/files"
 maxsize=1000000000 #in byte.  Leave blank to ignore file size
 
+#Do not edit after this
+trashcan="$HOME/.local/share/Trash"
 if ! mkdir -p "$trashcan"; then
   echo "cannot create trashcan"
   exit 1
@@ -16,37 +17,36 @@ case $1 in
     echo
     echo "trashcan location $trashcan"
     echo
-    echo "When a file is move to trashcan using this script, a .filename.info containing the filepath and deletion date is created in the trashcan.  The script uses this info file with the --restore option."
+    echo "When a file is moved using this script, it's moved to $trashcan/files folder and a file with the same filename plus the extension .trashinfo containing the filepath and deletion date is created in the $trashcan/info folder."
     echo
     echo "When trash or restore a file, if the destination already have the same filename, _1 is added to the new filename." ;;
   --empty)
-    cd "$trashcan"
-    rm -rf * .??* ;;
+    rm -rf "$trashcan"/files/*
+    rm -rf "$trashcan"/info/* ;;
   --restore)
     shift
     for i; do
-      infofile=`dirname "$1"`/.`basename "$i"`.info
-      if [[ -f "$infofile" ]]; then
-        filepath=`head -n1 $infofile`
-      else
-        echo "cannot restore $i due to $infofile missing"
+      infofile="$trashcan"/info/`basename "$i"`.trashinfo
+      Path=`cat "$infofile" | grep -m1 Path= | cut -d'=' -f2`
+      if [[ -z $Path ]]; then
+        echo "Cannot restore $i due to missing filepath"
         continue
       fi
-      targetfolder=`dirname "$filepath"`
-      while [[ -e "$filepath" ]]; do
+      targetfolder=`dirname "$Path"`
+      while [[ -e "$Path" ]]; do
         (( j++ ))
-        filepath="$filepath"_1
+        Path="$Path"_1
         if [[ $j -gt 100 ]]; then
           echo "cannot restore $i due to too many conflicts in $targetfolder"
           break
         fi
       done
-      [[ -e "$filepath" ]] && continue
-      mkdir -p "$targetfolder" && mv -n "$i" "$filepath" && rm "$infofile"
+      [[ -e "$Path" ]] && continue
+      mkdir -p "$targetfolder" && mv -n "$i" "$Path" && rm "$infofile"
     done ;;
   *)
     for i; do
-      if [[ `dirname "$i"` = "$trashcan" ]]; then
+      if echo $i | egrep -q ^$trashcan; then
         echo "cannot trash $i because it's already in the trashcan"
         continue
       fi
@@ -59,7 +59,7 @@ case $1 in
         continue
       fi
       filename=`basename "$i"`
-      while [[ -e "$trashcan/$filename" ]]; do
+      while [[ -e "$trashcan/files/$filename" ]]; do
         (( j++ ))
         filename="$filename"_1
         if [[ $j -gt 100 ]]; then
@@ -67,7 +67,7 @@ case $1 in
           break
         fi
       done
-      [[ -e "$trashcan/$filename" ]] && continue
-      mv -n "$i" "$trashcan/$filename" && echo -e "$i\ndeleted on `date`" > "$trashcan/.$filename.info"
+      [[ -e "$trashcan/files/$filename" ]] && continue
+      mv -n "$i" "$trashcan/files/$filename" && echo -e "[Trash Info]\nPath=$i\nDeletionDate=`date`" > "$trashcan/info/$filename.trashinfo"
     done ;;
 esac
