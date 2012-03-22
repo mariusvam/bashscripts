@@ -1,0 +1,65 @@
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+$fm_import
+if [[ -z $fm_pwd ]]; then
+  echo "This script is intended to be run with spacefm only."
+  exit 1
+fi
+sharefolder="$fm_cmd_data/sharefolder/"
+sharerc="$fm_cmd_data/sharerc"
+mkdir -p "$sharefolder"
+if ! source "$sharerc" &> /dev/null; then
+  prog=`which quickserve 2>/dev/null` || prog=`which python3 2>/dev/null` || prog=`which python2 2>/dev/null` || prog=`which webfsd 2>/dev/null`
+  if [[ -z $prog ]]; then
+    echo "One of the following programs is required: quickserve, python3, python, or webfs"
+    exit 1
+  fi
+  echo "#If value has space, it must be enclosed in quote" > "$sharerc"
+  echo "port=8000" >> "$sharerc"
+  echo "prog=$prog" >> "$sharerc"
+  echo "uploaddir=/tmp #only use when prog is quickserve" >> "$sharerc"
+  source "$sharerc"
+fi
+case "$prog" in
+  *quickserve) [[ $uploaddir ]] && httpserver="$prog --upload=$uploaddir --no-clobber -p $port $sharefolder" || httpserver="$prog -p $port $sharefolder" ;;
+  *python3) httpserver="$prog -m http.server $port" ;;
+  *python2) httpserver="$prog -m SimpleHTTPServer $port" ;;
+  *webfsd) httpserver="$prog -F -f index.html -p $port" ;;
+  *) echo "One of the following programs is required: quickserve, python3, python, or webfs"; exit 1 ;;
+esac
+if [[ $fm_file ]]; then
+  for i in "${fm_files[@]}"; do
+    ln -s "$i" "$sharefolder"
+  done
+else
+  ln -s "$fm_pwd" "$sharefolder"
+fi
+if ! pgrep -f "$httpserver" &> /dev/null; then
+  ip=`ifconfig|grep inet.*broadcast|awk '{print $2}' 2>/dev/null`
+  echo "When an item is shared, it is added to previously shared items.  You can remove share items by removing them from $sharefolder"
+  echo
+  echo "When a folder is shared, all subfolders are also shared."
+  echo
+  echo "Share item can be access via http://$ip:$port  Edit $portpref to change sharing port"
+  echo
+  echo "Press Stop to stop sharing"
+  cd "$sharefolder"
+  $httpserver
+fi
+exit $?
