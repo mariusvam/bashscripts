@@ -1,0 +1,47 @@
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+$fm_import
+if [[ -z $fm_pwd ]]; then
+  echo "This script is intended to be run with spacefm only."
+  exit 1
+fi
+if [[ -z $fm_file ]]; then
+  echo "This script restores selected item to its original location."
+  exit
+fi
+for i in "${fm_files[@]}"; do
+  infofile=`dirname "$fm_pwd"`/info/`basename "$i"`.trashinfo
+  Path=`cat "$infofile" | grep -m1 Path= | cut -d'=' -f2`
+  if [[ -z $Path ]]; then
+    echo "Cannot restore $i due to missing filepath"
+    continue
+  fi
+  targetfolder=`dirname "$Path"`
+  while [[ -e "$Path" ]]; do
+    (( j++ ))
+    Path="$Path"_1
+    if [[ $j -gt 100 ]]; then
+      echo "cannot restore $i due to too many conflicts in $targetfolder"
+      break
+    fi
+  done
+  [[ -e "$Path" ]] && continue
+  mkdir -p "$targetfolder" && mv -n "$i" "$Path" && rm "$infofile"
+done
+exit $?
