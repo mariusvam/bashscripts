@@ -1,0 +1,3 @@
+#!/bin/bash
+
+spacefm $HOME/.local/share/Trash/files &
