@@ -66,17 +66,15 @@ function checkmail(){
   tip="${m[0]}"
   if [[ ${#m[@]} -gt 1 ]]; then
     convert "$ICON" -gravity North -pointsize 16 -annotate 0 `expr ${#m[@]} - 1` $_img
-    echo "icon:$_img" >&4
     if [[ $SOUND = "TRUE" ]] && [[ -f "$WAV" ]]; then aplay "$WAV"; fi
     for i in "${m[@]:1}"; do
       tip="$tip\n-${i:0:50}"
     done
   elif [[ ${#m[@]} -eq 1 ]]; then
-    echo "icon:$ICON" >&4
+    cp "$ICON" $_img
   else
     convert "$ICON" -gravity Center -pointsize 24 -annotate 0 "X" $_img
     tip="cannot access gmail!"
-    echo "icon:$_img" >&4
   fi
   echo  "tooltip:$tip" >&4
   echo "action:$RUN" >&4
@@ -111,6 +109,7 @@ esac
 [[ -e $pipe ]] || mkfifo $pipe
 exec 4<> $pipe
 trap on_exit EXIT
+cp "$ICON" $_img
 while true; do
   if ! pgrep -f "gmail.*notification"; then
     yad --kill-parent --text gmailchecker --notification --listen <&4 &
@@ -118,5 +117,6 @@ while true; do
     sleep 1
   fi
   checkmail
+  echo "icon:$_img" >&4
   sleep $INTERVAL
 done
