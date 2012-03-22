@@ -1,5 +1,20 @@
 #!/bin/bash
-# author: trile7 at gmail dot com
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
 
 maxsize=1000000000 #in byte.  Leave blank to ignore file size
 
@@ -11,15 +26,21 @@ if ! mkdir -p "$trashcan"; then
 fi
 case $1 in
   -h|--help|--usage|--info)
-    echo "$0 filepath1 filepath2 ...            #move file to $trashcan"
+    echo "$0 filepath1 filepath2 ...            #move file to trashcan"
     echo "$0 --restore filepath1 filepath2 ...  #restore item to its orginal location"
-    echo "$0 --empty                            #remove all items in $trashcan"
+    echo "$0 --empty                            #remove all items in trashcan"
+    echo "$0 --list                             #list content of trashcan"
     echo
-    echo "trashcan location $trashcan"
+    echo "trashcan location is $trashcan"
     echo
     echo "When a file is moved using this script, it's moved to $trashcan/files folder and a file with the same filename plus the extension .trashinfo containing the filepath and deletion date is created in the $trashcan/info folder."
     echo
     echo "When trash or restore a file, if the destination already have the same filename, _1 is added to the new filename." ;;
+  --list)
+    for i in $trashcan/info/*.trashinfo; do
+      tail -n2 "$i"
+      echo "---------"
+    done ;;
   --empty)
     rm -rf "$trashcan"/files/*
     rm -rf "$trashcan"/info/* ;;
