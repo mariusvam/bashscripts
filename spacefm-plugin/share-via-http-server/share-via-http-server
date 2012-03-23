@@ -51,7 +51,7 @@ else
   ln -s "$fm_pwd" "$sharefolder"
 fi
 if ! pgrep -f "$httpserver" &> /dev/null; then
-  ip=`ifconfig|grep inet.*broadcast|awk '{print $2}' 2>/dev/null`
+  ip=`ifconfig 2>/dev/null | grep inet.*broadcast | awk '{print $2}'`
   echo "When an item is shared, it is added to previously shared items.  You can remove share items by removing them from $sharefolder"
   echo
   echo "When a folder is shared, all subfolders are also shared."
