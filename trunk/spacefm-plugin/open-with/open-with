@@ -1,0 +1,33 @@
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+$fm_import
+if [[ -z $fm_pwd ]]; then
+  echo "This script is intended to be run with spacefm only."
+  exit 1
+fi
+if ! which dmenu 2> /dev/null; then
+  echo "please install dmenu"
+  exit 1
+fi
+oIFS=IFS
+IFS=:
+CMD=`stest -flx $PATH | sort -u | dmenu`
+IFS=$oIFS
+$CMD "${fm_files[@]}"
+exit $?
