@@ -19,7 +19,6 @@ COMMENT
 #dependencies: cdrtools, dvd+rw-tools
 #optional dependencies: mpg123 or lame or normalize to convert mp3 to wav for audio cd
 
-tty -s || exit 1
 burndir="/tmp/burndir"
 tmpfile="/tmp/burn.txt"
 
@@ -214,6 +213,7 @@ case $1 in
     for i; do addfile "$i"; done
     exit ;;
   --help|-h)
+    tty -s || exit 1
     echo "$0 --addfiles               #add files to burn folder, then exit"
     echo "$0 --help                   #print this, then exit"
     echo "$0 filepath1 filepath2 .... #add files for burn folder, then start burn menu"
@@ -224,6 +224,7 @@ case $1 in
   *)
     for i; do addfile "$i"; done ;;
 esac
+tty -s || exit 1
 DEV=(`ls /dev/sr*`)
 if [[ ${#DEV[@]} -gt 2 ]]; then
   menu ${DEV[@]}
