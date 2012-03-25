@@ -48,67 +48,61 @@ function burnmenu {
   echo "Data content: $burndir"
   echo "Mode: $MODE"
   echo
+  #Burn audio CD from mp3
+  if [[ $MODE = audio && $DISCTYPE = CD* && $cue ]]; then
+    cmd="cdrecord -v dev=$DEV driveropts=burnfree cuefile=$cue -text -raw -pad"
+    burndir=`dirname $burndir`
+  #Burn audio CD from WAV
+  elif [[ $MODE = audio && $DISCTYPE = CD* ]]; then
+    cmd="cdrecord -v dev=$DEV driveropts=burnfree -pad -audio *.wav"
+  #Burn video DVD
+  elif [[ $MODE = video && $DISCTYPE = DVD* ]]; then
+    vollabel
+    cmd="growisofs -dvd-video -udf -f -l -V ${VOLID:0:8} -Z $DEV $burndir"
+  #Burn data
+  elif [[ $MODE = data && $DISCTYPE = DVD* ]]; then
+    vollabel
+    cmd="growisofs -r -f -J -l -V ${VOLID:0:8} -Z $DEV $burndir"
+  elif [[ $MODE = data && $DISCTYPE = DVD* ]]; then
+    vollabel
+    cmd="growisofs -r -f -J -l -V ${VOLID:0:8} -M $DEV $burndir"
+  elif [[ $MODE = data && $DISCTYPE = CD* ]]; then
+    cmd="cdrecord -v -overburn -eject -multi dev=$DEV $burndir"
+  #Burn iso file
+  elif [[ $MODE = burniso && $DISCTYPE = DVD* ]]; then
+    cmd="growisofs -Z $DEV=$ISO"
+  elif [[ $MODE = burniso && $DISCTYPE = DVD* ]]; then
+    cmd="growisofs -M $DEV=$ISO"
+  elif [[ $MODE = burniso && $DISCTYPE = CD* ]]; then
+    cmd="cdrecord -v -eject -multi dev=$DEV $ISO"
+  #Make iso from burndir or DEV
+  elif [[ $MODE = makeiso ]]; then
+    read -p "ISO filename: " i
+    FNAME=${i:-$HOME/image.iso}
+    while [[ -e $FNAME ]]; do FNAME=${FNAME%.*}_1.iso; done
+    VOLID=`basename "$FNAME" .iso`
+    menu "Data content" "Video DVD content"
+    if [[ $? -eq 1 ]]; then
+      cmd="mkisofs -r -f -J -l -V ${VOLID:0:8} -o $FNAME $burndir"
+    else
+      cmd="mkisofs -dvd-video -udf -f -l -V ${VOLID:0:8} -o $FNAME $burndir"
+    fi
+  fi
+  echo "Burning command:"
+  echo "$cmd"
+  echo
   menu "Burn" "Change device" "Drive and media info" "Erase RW media" "Refresh" "Mode menu"
   case $? in
-    #Burn audio CD from mp3
-    0) if [[ $MODE = audio && $DISCTYPE = CD* && $DISCSTAT = empty && $cue ]]; then
-         cdrecord -v dev=$DEV driveropts=burnfree cuefile=$cue -text -raw -pad
-         burndir=`dirname $burndir`
-    #Burn audio CD from WAV
-       elif [[ $MODE = audio && $DISCTYPE = CD* && $DISCSTAT = empty ]]; then
-         cdrecord -v dev=$DEV driveropts=burnfree -pad -audio *.wav
-    #Burn video DVD
-       elif [[ $MODE = video && $DISCTYPE = DVD* && $DISCSTAT = empty ]]; then
-         vollabel
-         growisofs -dvd-video -udf -f -l -V "${VOLID:0:8}" -Z $DEV $burndir
-       elif [ $DISCSTAT != empty ]; then
-         echo "Media is not empty"
-         burnmenu
-       fi
-    #Burn data
-       if [[ $MODE = data && $DISCTYPE = DVD* && $DISCSTAT = empty ]]; then
-         vollabel
-         growisofs -r -f -J -l -V "${VOLID:0:8}" -Z $DEV $burndir
-       elif [[ $MODE = data && $DISCTYPE = DVD* && $DISCSTAT != empty ]]; then
-         vollabel
-         growisofs -r -f -J -l -V "${VOLID:0:8}" -M $DEV $burndir
-       elif [[ $MODE = data && $DISCTYPE = CD* ]]; then
-         cdrecord -v -overburn -eject -multi dev=$DEV $burndir
-       fi
-    #Burn iso file
-       if [[ $MODE = burniso && $DISCTYPE = DVD* && $DISCSTAT = empty ]]; then
-         growisofs -Z $DEV="$ISO"
-       elif [[ $MODE = burniso && $DISCTYPE = DVD* && $DISCSTAT != empty ]]; then
-         growisofs -M $DEV="$ISO"
-       elif [[ $MODE = burniso && $DISCTYPE = CD* ]]; then
-         cdrecord -v -eject -multi dev=$DEV "$ISO"
-       fi
-    #Make iso from burndir or DEV
-       if [[ $MODE = makeiso ]]; then
-         read -p "ISO filename: " i
-         FNAME=${i:-$HOME/image.iso}
-         while [[ -e $FNAME ]]; do FNAME=${FNAME%.*}_1.iso; done
-         VOLID=`basename "$FNAME" .iso`
-         menu "Data content" "Video DVD content"
-         if [[ $? -eq 1 ]]; then
-           mkisofs -r -f -J -l -V "${VOLID:0:8}" -o "$FNAME" $burndir
-         else
-           mkisofs -dvd-video -udf -f -l -V "${VOLID:0:8}" -o "$FNAME" $burndir
-         fi
-       fi
-       ;;
-    #change device
+    0) $cmd ;;
     1) read -p "device path: " i
        [[ -e $i ]] || echo "Device $i doesn't exist!"
        DEV=${i:=$DEV}
        burnmenu
        ;;
-    #View drive and media info
     2) clear
        cat $tmpfile
        burnmenu
        ;;
-    #Erase rewritable media
     3) if [[ $DISCTYPE = DVD-RW* ]]; then
          dvd+rw-format $DEV
        elif [[ $DISCTYPE = CD-RW* ]]; then
@@ -211,7 +205,7 @@ case $1 in
   --addfiles)
     shift
     for i; do addfile "$i"; done
-    exit ;;
+    exit 0 ;;
   --help|-h)
     tty -s || exit 1
     echo "$0 --addfiles               #add files to burn folder, then exit"
@@ -220,7 +214,7 @@ case $1 in
     echo "$0                          #start burn menu"
     echo "To burn ISO file, copy/link it to burn folder.  Only the first ISO file will be burned."
     echo "Burn folder is located at $burndir"
-    exit ;;
+    exit 0 ;;
   *)
     for i; do addfile "$i"; done ;;
 esac
