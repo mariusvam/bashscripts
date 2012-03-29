@@ -37,10 +37,7 @@ case $1 in
     echo
     echo "When trash or restore a file, if the destination already have the same filename, _1 is added to the new filename." ;;
   --list)
-    for i in $trashcan/info/*.trashinfo; do
-      tail -n2 "$i"
-      echo "---------"
-    done ;;
+    for i in $trashcan/info/*.trashinfo; do cat "$i"; done ;;
   --empty)
     rm -rf "$trashcan"/files/*
     rm -rf "$trashcan"/info/* ;;
@@ -48,22 +45,22 @@ case $1 in
     shift
     for i; do
       infofile="$trashcan"/info/`basename "$i"`.trashinfo
-      Path=`cat "$infofile" | grep -m1 Path= | cut -d'=' -f2`
-      if [[ -z $Path ]]; then
+      filepath=`cat "$infofile" | grep -m1 Path= | cut -d'=' -f2`
+      if [[ -z $filepath ]]; then
         echo "Cannot restore $i due to missing filepath"
         continue
       fi
-      targetfolder=`dirname "$Path"`
-      while [[ -e "$Path" ]]; do
+      targetfolder=`dirname "$filepath"`
+      targetfile=`basename "$filepath"`
+      while [[ -e "$filepath" ]]; do
         (( j++ ))
-        Path="$Path"_1
-        if [[ $j -gt 100 ]]; then
+        filepath=$targetfolder/$targetfile'_'$j
+        if [[ $j -gt 99 ]]; then
           echo "cannot restore $i due to too many conflicts in $targetfolder"
-          break
+          continue 2
         fi
       done
-      [[ -e "$Path" ]] && continue
-      mkdir -p "$targetfolder" && mv -n "$i" "$Path" && rm "$infofile"
+      mkdir -p "$targetfolder" && mv -n "$i" "$filepath" && rm "$infofile"
     done ;;
   *)
     for i; do
@@ -82,13 +79,12 @@ case $1 in
       filename=`basename "$i"`
       while [[ -e "$trashcan/files/$filename" ]]; do
         (( j++ ))
-        filename="$filename"_1
-        if [[ $j -gt 100 ]]; then
+        filename=`basename "$i"`_$j
+        if [[ $j -gt 99 ]]; then
           echo "cannot trash $i due to conflict in $trashcan"
-          break
+          continue 2
         fi
       done
-      [[ -e "$trashcan/files/$filename" ]] && continue
-      mv -n "$i" "$trashcan/files/$filename" && echo -e "[Trash Info]\nPath=$i\nDeletionDate=`date`" > "$trashcan/info/$filename.trashinfo"
+      mv -n "$i" "$trashcan/files/$filename" && echo -e "[$filename trash info]\nPath=$i\nDeletionDate=`date`" > "$trashcan/info/$filename.trashinfo"
     done ;;
 esac
