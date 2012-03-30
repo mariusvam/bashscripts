@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation version 3.
 
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -36,6 +35,11 @@ if ! source "$sharerc" &> /dev/null; then
   echo "uploaddir=/tmp #only use when prog is quickserve" >> "$sharerc"
   source "$sharerc"
 fi
+if [[ -z $prog ]] || [[ -z $port ]]; then
+  echo "Either program or port is not set in $sharerc file.  It must be corrected before continue."
+  spacefm "$fm_cmd_data"
+  exit 1
+fi
 case "$prog" in
   *quickserve) [[ $uploaddir ]] && httpserver="$prog --upload=$uploaddir --no-clobber -p $port $sharefolder" || httpserver="$prog -p $port $sharefolder" ;;
   *python3) httpserver="$prog -m http.server $port" ;;
@@ -51,12 +55,9 @@ else
   ln -s "$fm_pwd" "$sharefolder"
 fi
 if ! pgrep -f "$httpserver" &> /dev/null; then
-  ip=`ifconfig 2>/dev/null | grep inet.*broadcast | awk '{print $2}'`
-  echo "When an item is shared, it is added to previously shared items.  You can remove share items by removing them from $sharefolder"
+  ip=`ip address show | grep inet.*brd | awk '{print $2}'`
   echo
-  echo "When a folder is shared, all subfolders are also shared."
-  echo
-  echo "Share item can be access via http://$ip:$port  Edit $portpref to change sharing port"
+  echo "Share items can be access via http://${ip:-localhost}:$port"
   echo
   echo "Press Stop to stop sharing"
   cd "$sharefolder"
