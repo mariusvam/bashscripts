@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation version 3.
 
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,8 +21,8 @@ if [[ -z $fm_pwd ]]; then
   exit 1
 fi
 mkdir -p "$fm_cmd_data"
-trashrc="$fm_cmd_data"/trashrc
-trashcan="$HOME/.local/share/Trash"
+trashrc=$fm_cmd_data/trashrc
+trashcan=$HOME/.local/share/Trash
 if [[ ! -f "$trashrc" ]]; then
   echo "#Maximum file size that can be moved to trash in byte.  Leave blank to ignore file size" >> "$trashrc"
   echo maxsize=1000000000 >> "$trashrc"
@@ -32,7 +31,7 @@ source "$trashrc"
 mkdir -p "$trashcan/files" "$trashcan/info"
 if [[ $? -ne 0 ]]; then
   echo "Cannot create trashcan"
-  echo "Please edit trashcan path in $trashrc file"
+  echo "Please make sure you can write to $HOME/.local/share directory"
   exit 1
 fi
 if echo $fm_pwd | egrep -q ^$trashcan; then
@@ -40,11 +39,8 @@ if echo $fm_pwd | egrep -q ^$trashcan; then
   exit
 fi
 if [[ -z $fm_file ]]; then
-  echo "Trash preference is located at $trashrc.  Edit this file to change maximum file size that can be moved to trash."
-  echo
-  echo "When a file is trashed using this script, it's moved to $trashcan/files folder and a file with the same filename plus the extension .trashinfo containing the filepath and deletion date is created in the $trashcan/info folder."
-  echo
-  echo "When trash or restore a file, if the destination already have the same filename, _1 is added to the new filename."
+  echo "This script moves selected item to $trashcan"
+  spacefm "$fm_cmd_data"
   exit
 fi
 for i in "${fm_files[@]}"; do
@@ -55,13 +51,12 @@ for i in "${fm_files[@]}"; do
   filename=`basename "$i"`
   while [[ -e "$trashcan/files/$filename" ]]; do
     (( j++ ))
-    filename="$filename"_1
-    if [[ $j -gt 100 ]]; then
+    filename=`basename "$i"`_$j
+    if [[ $j -gt 99 ]]; then
       echo "Cannot trash $i due to conflict in $trashcan"
-      break
+      continue 2
     fi
   done
-  [[ -e "$trashcan/files/$filename" ]] && continue
-  mv -n "$i" "$trashcan/files/$filename" && echo -e "[Trash Info]\nPath=$i\nDeletionDate=`date`" > "$trashcan/info/$filename.trashinfo"
+  mv "$i" "$trashcan/files/$filename" && echo -e "[$filename trash info]\nPath=$i\nDeletionDate=`date`" > "$trashcan/info/$filename.trashinfo"
 done
 exit $?
