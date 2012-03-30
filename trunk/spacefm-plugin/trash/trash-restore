@@ -4,8 +4,7 @@
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
+  the Free Software Foundation version 3.
 
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,21 +26,21 @@ if [[ -z $fm_file ]]; then
 fi
 for i in "${fm_files[@]}"; do
   infofile=`dirname "$fm_pwd"`/info/`basename "$i"`.trashinfo
-  Path=`cat "$infofile" | grep -m1 Path= | cut -d'=' -f2`
-  if [[ -z $Path ]]; then
+  filepath=`cat "$infofile" | grep -m1 Path= | cut -d'=' -f2`
+  if [[ -z $filepath ]]; then
     echo "Cannot restore $i due to missing filepath"
     continue
   fi
-  targetfolder=`dirname "$Path"`
-  while [[ -e "$Path" ]]; do
+  targetfolder=`dirname "$filepath"`
+  targetfile=`basename "$filepath"`
+  while [[ -e $filepath ]]; do
     (( j++ ))
-    Path="$Path"_1
-    if [[ $j -gt 100 ]]; then
+    filepath=$targetfolder/$targetfile'_'$j
+    if [[ $j -gt 99 ]]; then
       echo "cannot restore $i due to too many conflicts in $targetfolder"
-      break
+      continue 2
     fi
   done
-  [[ -e "$Path" ]] && continue
-  mkdir -p "$targetfolder" && mv -n "$i" "$Path" && rm "$infofile"
+  mkdir -p "$targetfolder" && mv "$i" "$filepath" && rm "$infofile"
 done
 exit $?
