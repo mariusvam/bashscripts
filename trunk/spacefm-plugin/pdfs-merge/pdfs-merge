@@ -32,9 +32,9 @@ if [[ ${#fm_files[@]} -ge 2 ]]; then
       exit 1
     fi
   done
-  mkdir -p $foldername
+  mkdir -p "$foldername"
   gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -sOutputFile="$newfile" "${fm_files[@]}" && rm "${fm_files[@]}"
 else
-  echo "At least 2 files are needed to merge."
+  echo "At least 2 PDF files are needed to merge."
   exit 1
 fi
