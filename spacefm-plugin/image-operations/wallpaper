@@ -1,0 +1,1 @@
+display -resize `xdpyinfo | grep dimension | awk '{print $2}'`\> -window root %f
