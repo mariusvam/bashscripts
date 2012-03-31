@@ -1,0 +1,1 @@
+display -delay 2 -loop 0 -coalesce -auto-orient -immutable -resize 800x600\> %F
