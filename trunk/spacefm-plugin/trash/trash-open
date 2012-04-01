@@ -15,5 +15,4 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-spacefm $HOME/.local/share/Trash/files
-exit $?
+[[ -d $HOME/.local/share/Trash/files ]] && spacefm "$HOME/.local/share/Trash/files" || echo "trashcan doesn't exist.  trascan will be created automatical once something is trashed"
