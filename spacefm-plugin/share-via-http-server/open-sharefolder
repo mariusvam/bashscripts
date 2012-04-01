@@ -16,5 +16,5 @@
 COMMENT
 
 $fm_import
-find `dirname "$fm_cmd_data"`  -mindepth 2 -maxdepth 2 -type d -name sharefolder -exec spacefm '{}' \;
-exit $?
+sharedir=`find "${fm_cmd_data%/*}" -mindepth 2 -maxdepth 2 -type d -name sharefolder`
+[[ $sharedir ]] && spacefm "$sharedir" || echo "sharefold does not exist.  Please start sharing first."
