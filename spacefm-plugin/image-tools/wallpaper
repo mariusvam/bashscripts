@@ -1,1 +1,45 @@
-display -resize `xdpyinfo | grep dimension | awk '{print $2}'`\> -window root %f
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+$fm_import
+if [[ -z $fm_pwd ]]; then
+  echo "This script is intended to be run with spacefm only."
+  exit 1
+fi
+if [[ $fm_file ]]; then
+  rootsize=`xdpyinfo | grep dimension | awk '{print $2}'`
+  rootw=`echo $rootsize | cut -d'x' -f1`
+  rooth=`echo $rootsize | cut -d'x' -f2`
+  img=/tmp/.wallpaper.jpg
+  case $fm_value in
+    tile) display -window root "$fm_file"; exit ;;
+    *resize*) convert "$fm_file" -resize $rootsize "$img" ;;
+    stretch) convert "$fm_file" -resize $rootsize! "$img" ;;
+    *) convert "$fm_file" -resize $rootsize\> "$img" ;;
+  esac
+  imgsize=`identify $img | awk '{print $3}'`
+  imgw=`echo $imgsize | cut -d'x' -f1`
+  imgh=`echo $imgsize | cut -d'x' -f2`
+  x=$((rootw-imgw)); x=$((x/2))
+  y=$((rooth-imgh)); y=$((y/2))
+  case $fm_value in
+    *center*) display -geometry $rootsize+$x+$y -window root $img ;;
+    *) display -window root $img ;;
+  esac
+else
+  echo "Select an image file to set as wallpaper"
+fi
