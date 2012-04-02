@@ -1,0 +1,51 @@
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+$fm_import
+if [[ -z $fm_pwd ]]; then
+  echo "This script is intended to be run with spacefm only."
+  exit 1
+fi
+if [[ $fm_file ]]; then
+  for i in "${fm_files[@]}"; do
+    lastpage=`gs -q -dNODISPLAY -c "($i) (r) file runpdfbegin pdfpagecount = quit"`
+    tmpdir=/tmp/pdfextract
+    mkdir -p $tmpdir
+    oIFS=IFS; IFS=$IFS','
+    j=(`echo $fm_value`)
+    IFS=$oIFS
+    for p in ${j[@]}; do
+      if [[ $p = *-* ]]; then
+        p1=`echo $p | cut -d'-' -f1`
+        [[ $p1 -gt $lastpage ]] && continue
+        p2=`echo $p | cut -d'-' -f2`
+        [[ $p2 = end ]] && p2=$lastpage
+        [[ $p2 -gt $lastpage ]] && p2=$lastpage
+        gs -o -q -sDEVICE=pdfwrite -dFirstPage=$p1 -dLastPage=$p2 -sOutputFile=$tmpdir/$p.pdf "$i"
+      elif [[ $p = end ]]; then
+        p=$lastpage
+        gs -o -q -sDEVICE=pdfwrite -dFirstPage=$p -dLastPage=$p -sOutputFile=$tmpdir/$p.pdf "$i"
+      elif [[ $p -le $lastpage ]]; then
+        gs -o -q -sDEVICE=pdfwrite -dFirstPage=$p -dLastPage=$p -sOutputFile=$tmpdir/$p.pdf "$i"
+      fi
+    done
+    gs -o -q -sDEVICE=pdfwrite -sOutputFile="${i%.*}_p$fm_value.pdf" $tmpdir/*.pdf
+    rm -rf $tmpdir
+  done
+else
+  echo "Select a PDF file to extract pages."
+fi
