@@ -1,1 +1,1 @@
-identify %N
+echo "image, format, dimension, geometry, depth, class, size, processing times"; identify %N
