@@ -1,0 +1,180 @@
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+function menu {
+  echo -ne $blue$bold
+  echo "---Renaming Menu---"
+  n=0
+  for i in "$@"; do
+    echo "$((n++)))   $i"
+  done
+  echo "c|q) Cancel"
+  echo -e $green
+  read -p "Enter a number from menu: " i
+  if [[ $i = c ]] || [[ $i = q ]]; then
+    echo -e $none; exit 1
+  elif test $i -lt $n 2>/dev/null; then
+    echo -e $none; return $i
+  else
+    echo -e "$red$i is an invalid entry...please try again!$blue"
+    echo
+    menu "$@"
+  fi
+  }
+
+function space2underscore {
+  newname=${1// /_}
+  }
+
+function underscore2space {
+  newname=${1//_/ }
+  }
+
+function upper {
+  newname=`echo $1 | tr [:lower:] [:upper:]`
+  }
+
+function lower {
+  newname=`echo $1 | tr [:upper:] [:lower:]`
+  }
+
+function upperfirst {
+  words=(`echo "$1"`)
+  W=""
+  for w in ${words[@]}; do
+    x=`echo ${w:0:1}`
+    X=`echo ${w:0:1} | tr [:lower:] [:upper:]`
+    W=($W ${w/$x/$X})
+  done
+  newname=`echo ${W[@]}`
+  }
+
+function x2y {
+  newname=${1//$x/$y}
+  }
+
+function insert {
+  case $pos in
+    end) p=${#1} ;;
+    end-ext) noext=${1%.*}; p=${#noext} ;;
+    *)
+      if test $pos -ge 0 2>/dev/null; then
+        p=$pos
+      else
+        err "$pos is an invalid position"
+      fi ;;
+  esac
+  if [[ $counter ]]; then
+    c=${counter[$n]}
+    ((n++))
+    x1=${x//%/$c}
+    newname=${1:0:$p}$x1${1:$p}
+  else
+    newname=${1:0:$p}$x${1:$p}
+  fi
+  }
+
+function remove {
+  x=${1:$p:$n}
+  newname=${1//$x/}
+  }
+
+function err {
+  echo -e "$red$@$none"; exit 1
+  }
+
+function preview {
+  echo "Below is a preview of the changes:"
+  echo -e $yellow
+  for i; do
+    $cmd "$i" || continue
+    echo "$i -> $newname"
+  done
+  }
+
+function changename {
+    for i; do
+    $cmd "$i" || continue
+    if [[ -d $i ]] && [[ $cmd = upper || $cmd = lower || $cmd = upperfirst ]]; then
+      mv "$i" "$newname$$"
+      mv "$newname$$" "$newname"
+    else
+      mv "$i" "$newname"
+    fi
+  done
+  }
+
+blue='\e[0;34m'
+green='\e[0;32m'
+red='\e[0;31m'
+yellow='\e[0;33m'
+bold='\e[1m'
+none='\e[0m'
+if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
+  echo "usage: ${0//*/} filename1 filename2 ....."; exit
+fi
+
+menu "Space to underscore _" "Underscore _ to space" "All UPPERCASE" "all lowercase" "Capital First Word" "Convert x to y" "Insert counter n and/or character x at position p" "Remove n number of characters at position p"
+case $? in
+  0) cmd=space2underscore ;;
+  1) cmd=underscore2space ;;
+  2) cmd=upper ;;
+  3) cmd=lower ;;
+  4) cmd=upperfirst ;;
+  5) cmd=x2y
+    echo -e "Use wildcard ${green}?${none} to match any one character or ${green}*${none} to match all characters"
+    echo -ne $green
+    read -p "Enter x (value to find, required): " x
+    [[ $x ]] || err "x is required"
+    read -p "Enter y (value to convert to, optional): " y
+    echo -e $none ;;
+  6) cmd=insert
+    echo -e "Use ${green}0${none} for the beginning of name, ${green}end${none} for the end of name, or ${green}end-ext${none} for the end of name but keep extension."
+    echo -ne $green
+    read -p "Enter p (insert position, required): " pos
+    if ! test $pos -ge 0 2>/dev/null  && [[ $pos != end* ]]; then err "$pos is invalid"; fi
+    echo -e $none
+    echo -e "Use ${green}%${none} to insert counter."
+    echo -e $green
+    read -p "Enter x (character to insert, required): " x
+    [[ $x ]] || err "x is required"
+    echo -e $none
+    if [[ $x = *%* ]]; then
+      echo
+      echo "Include the number of digits desire in start counter (i.e. for 3 digits counter and starting at 1, enter: 001)"
+      echo -e $green
+      read -p "Enter start counter n (n >= 0, required): " counter
+      echo -e $none
+      test $counter -ge 0 2>/dev/null || err "$counter is invalid"
+      n=`expr $counter + $# - 1`
+      counter=(`seq -w $counter 1 $n`)
+      n=0
+    fi ;;
+  7) cmd=remove
+    echo -e "Use ${green}0${none} for the beginning of name"
+    echo -e $green
+    read -p "Enter p (remove position, p >= 0, required): " p
+    test $p -ge 0 2>/dev/null || err "$p is invalid"
+    read -p "Enter n (number of characters to remove, n > 0, required): " n
+    test $n -gt 0 2>/dev/null || err "$n is invalid"
+    echo -e $none ;;
+esac
+preview "$@"
+echo -e $green
+read -p "Do you want to proceed with rename (Y/n)? " i
+echo -e $none
+[[ $i = n ]] || changename "$@"
