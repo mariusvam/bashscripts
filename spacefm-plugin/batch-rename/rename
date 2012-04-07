@@ -125,7 +125,7 @@ yellow='\e[0;33m'
 bold='\e[1m'
 none='\e[0m'
 if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
-  echo "usage: ${0//*/} filename1 filename2 ....."; exit
+  echo "usage: ${0##*/} filename1 filename2 ....."; exit
 fi
 
 menu "Space to underscore _" "Underscore _ to space" "All UPPERCASE" "all lowercase" "Capital First Word" "Convert x to y" "Insert counter n and/or character x at position p" "Remove n number of characters at position p"
