@@ -92,7 +92,7 @@ function resize {
     for i; do convert "$i" -resize "$s" "$s/${i##*/}"; done
   else
     echo -e "${red}A value for size is required $none"
-    resize
+    resize "$@"
   fi
   }
 
@@ -107,7 +107,7 @@ function rotate {
     done
   else
     echo -e "${red}Rotation degree must be a non-zero number $none"
-    rotate
+    rotate "$@"
   fi
   }
 
