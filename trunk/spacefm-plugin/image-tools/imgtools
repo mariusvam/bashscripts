@@ -145,8 +145,9 @@ yellow='\e[0;33m'
 bold='\e[1m'
 none='\e[0m'
 if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
-  echo "Features: image slideshow, image information, set image as wallpaper, image resize, image rotation, convert image format, and combine images to pdf"
-  echo "Usage: ${0##*/} image1 image2 ....."
+  echo "Image Tools Features: image slideshow, image information, set image as wallpaper, image resize, image rotation, convert image format, and combine images to pdf"
+  echo
+  echo -e "${bold}Usage: ${0##*/} image1 image2 ..... $none"
   exit
 fi
 
