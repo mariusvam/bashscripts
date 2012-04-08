@@ -133,7 +133,7 @@ function img2pdf {
   elif [[ $f != *.pdf ]]; then
     f=$f.pdf
   fi
-  [[ -e $f ]] && f={$f%.*}.`date +%s`.pdf
+  [[ -e $f ]] && f=${f%.*}.`date +%s`.pdf
   mkdir -p `dirname "$f"`
   convert "$@" -compress Zip "$f"
   }
