@@ -18,6 +18,7 @@ COMMENT
 function menu {
   n=0
   choices=("$@")
+  echo -e "$blue$bold$menutitle"
   for i in "${choices[@]}"; do
     echo "$((n++)))   $i"
   done
@@ -59,7 +60,7 @@ function wallpaper {
   rootw=`echo $rootsize | cut -d'x' -f1`
   rooth=`echo $rootsize | cut -d'x' -f2`
   img=/tmp/.wallpaper.jpg
-  echo -e "${blue}${bold}---Wallpaper Modes---"
+  menutitle="---Wallpaper Modes---"
   menu "Tile" "Resize and Tile" "Center" "Resize and Center" "Stretch"
   case $choice in
     Tile) display -window root "$1"; exit ;; #tile
@@ -112,7 +113,7 @@ function rotate {
   }
 
 function format {
-  echo -e "${blue}${bold}---Image Formats---"
+  menutitle="---Image Formats---"
   menu "jpg" "png" "gif" "ico" "bmp" "tif" "ps" "pdf"
   mkdir -p $choice
   for i; do
@@ -151,7 +152,7 @@ if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
   exit
 fi
 
-echo -e "${blue}${bold}---Image Tools---"
+menutitle="---Image Tools---"
 menu "Image Slideshow" "Image Information" "Set Image as Wallpaper" "Image Resize" "Image Rotation" "Image Format Conversion" "Combine Images to PDF"
 case $choice in
   *Slideshow) slideshow "$@" ;;
