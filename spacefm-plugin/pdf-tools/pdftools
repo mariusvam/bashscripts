@@ -1,0 +1,140 @@
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+function menu {
+  n=0
+  choices=("$@")
+  echo -e "$blue$bold$menutitle"
+  for i in "${choices[@]}"; do
+    echo "$((n++)))   $i"
+  done
+  echo "c|q) Cancel"
+  echo -e $green
+  read -p "Enter a number from menu: " i
+  if [[ $i = c ]] || [[ $i = q ]]; then
+    echo -e $none; exit 1
+  elif test $i -lt $n 2>/dev/null; then
+    echo -e $none; choice=${choices[i]}; return $i
+  else
+    echo -e "$red$i is an invalid entry...please try again!"
+    echo
+    menu "${choices[@]}"
+  fi
+  }
+
+function mergepdf {
+  if [[ $# -lt 2 ]]; then
+    echo "${red}Select at least 2 or more PDF files to merge"
+    exit 1
+  fi
+  echo -ne $green
+  read -p "Enter merged pdf name (default merged.pdf): " f
+  echo -e $none
+  [[ $f && $f != *.pdf ]] && f=$f.pdf || f=merged.pdf
+  [[ -e $f ]] && f=${f%.*}-`date +%s`.pdf
+  mkdir -p `dirname "$f"`
+  gs -o -q -sDEVICE=pdfwrite -sOutputFile="$f" "$@"
+  if [[ $? -eq 0 ]]; then
+    echo -e $green
+    read -p "Remove $* (Y/n)? " i
+    [[ $i = n ]] || rm "$@"
+  fi
+  }
+
+function splitpdf {
+  for i; do
+    totalp=`gs -q -dNODISPLAY -c "($i) (r) file runpdfbegin pdfpagecount = quit"`
+    for (( p=1; p<=$totalp; p++ )); do
+      gs -o -q -sDEVICE=pdfwrite -dFirstPage=$p -dLastPage=$p -sOutputFile="${i%.*}-p$p.pdf" "$i"
+    done
+  done
+  }
+
+function extractpdf {
+  echo -e "Use ${green}space$none for separating pages, ${green}dash$none for range of pages, and ${green}end$none for the last page.  For example, to extract pages 1, 5, and 8 to the last page, enter: ${green}1 5 8-end"
+  read -p "Enter page: " -a p
+  echo -e $none
+  if [[ -z $p ]]; then
+    echo -e "${red}A value is required for page $none"
+    extractpdf "$@"; return 1
+  fi
+  for i in ${p[@]}; do
+    [[ $i = end ]] && continue
+    test ${i%*-end} -gt 0 2>/dev/null && continue
+    test $((i)) -lt 0 2>/dev/null && continue
+    echo -e "${red}$i is invalid $none"
+    extractpdf "$@"; return 1
+  done
+  tmpdir=/tmp/pdfextract
+  mkdir -p $tmpdir
+  for i; do
+    pages=`gs -q -dNODISPLAY -c "($i) (r) file runpdfbegin pdfpagecount = quit"`
+    for j in ${p[@]}; do
+      if [[ $j = *-* ]]; then
+        p1=`echo $j | cut -d'-' -f1`
+        [[ $p1 -gt $pages ]] && continue
+        p2=`echo $j | cut -d'-' -f2`
+        [[ $p2 = end ]] && p2=$pages
+        [[ $p2 -gt $pages ]] && p2=$pages
+      elif [[ $j = end ]]; then
+        p1=$pages; p2=$pages
+      elif [[ $j -le $pages ]]; then
+        p1=$j; p2=$j
+      fi
+      gs -o -q -sDEVICE=pdfwrite -dFirstPage=$p1 -dLastPage=$p2 -sOutputFile=$tmpdir/$j.pdf "$i"
+    done
+    ext=${p[@]}
+    ext=p${ext// /,}.pdf
+    gs -o -q -sDEVICE=pdfwrite -sOutputFile="${i%.*}-$ext" $tmpdir/*.pdf
+    rm -rf $tmpdir
+  done
+  }
+
+function pdf2jpg {
+  for i; do
+    gs -o -q -sDEVICE=jpeg -sOutputFile="${i%.*}-p%d.jpg" "$i"
+  done
+  }
+
+function pdf2txt {
+  for i; do
+    gs -o -q -sDEVICE=txtwrite -sOutputFile="${i%.*}.txt" "$i"
+  done
+  }
+
+blue='\e[0;34m'
+green='\e[0;32m'
+red='\e[0;31m'
+yellow='\e[0;33m'
+bold='\e[1m'
+none='\e[0m'
+if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
+  echo "PDF Tools Features: merge pdf files, spit or extract pages from pdf files, and convert pdf files to image or text."
+  echo
+  echo -e "${bold}Usage: ${0##*/} pdf1 pdf2 ..... $none"
+  exit
+fi
+menutitle="---PDF Tools---"
+menu "PDF Merge" "PDF Split" "PDF Extract" "PDF to JPG" "PDF to Text"
+case $? in
+  0) mergepdf "$@" ;;
+  1) splitpdf "$@" ;;
+  2) extractpdf "$@" ;;
+  3) pdf2jpg "$@" ;;
+  4) pdf2txt "$@" ;;
+esac
+echo -ne $none
