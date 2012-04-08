@@ -16,10 +16,9 @@
 COMMENT
 
 function menu {
-  echo -ne $blue$bold
-  echo "---Renaming Menu---"
   n=0
-  for i in "$@"; do
+  choices=("$@")
+  for i in "${choices[@]}"; do
     echo "$((n++)))   $i"
   done
   echo "c|q) Cancel"
@@ -28,11 +27,11 @@ function menu {
   if [[ $i = c ]] || [[ $i = q ]]; then
     echo -e $none; exit 1
   elif test $i -lt $n 2>/dev/null; then
-    echo -e $none; return $i
+    echo -e $none; choice=${choices[i]}; return $i
   else
-    echo -e "$red$i is an invalid entry...please try again!$blue"
-    echo
-    menu "$@"
+    echo -e "$red$i is an invalid entry...please try again!"
+    echo -e $none
+    menu "${choices[@]}"
   fi
   }
 
@@ -64,23 +63,60 @@ function upperfirst {
   }
 
 function x2y {
+  echo -ne $none
+  if [[ -z $x ]]; then
+    echo -e "Use wildcard ${green}?${none} to match any one character or ${green}*${none} to match all characters"
+    echo -ne $green
+    read -p "Enter x (find value, required): " x
+    if [[ -z $x ]]; then
+      err "x is required"
+      x2y; return 1
+    fi
+  fi
+  [[ $j ]] || read -p "Enter y (replacement value; leave blank to remove x): " y
+  j=1
   newname=${1//$x/$y}
   }
 
 function insert {
+  echo -ne $none
+  if [[ -z $pos ]]; then
+    echo -e "Use ${green}0${none} for the beginning of name, ${green}end${none} for the end of name, or ${green}end-ext${none} for the end of name but keep extension."
+    echo -ne $green
+    read -p "Enter p (insert position, required): " pos
+    if ! test $pos -ge 0 2>/dev/null  && [[ $pos != end* ]]; then
+      err "$pos is invalid"
+      pos=""; insert; return 1
+    fi
+  fi
+  if [[ -z $x ]]; then
+    echo -e "${none}Use ${green}%${none} to insert counter."
+    echo -ne $green
+    read -p "Enter x (character to insert, required): " x
+    if [[ -z $x ]]; then
+      err "x is required"
+      insert; return 1
+    fi
+  fi
+  if [[ $x = *%* && -z $counter ]]; then
+    echo -e "${none}Start counter (include number of digits; i.e. 3 digits counter starting at 1, enter: 001)"
+    echo -ne $green
+    read -p "Enter start counter n (n >= 0, required): " counter
+    if ! test $counter -ge 0 2>/dev/null; then
+      err "$counter is invalid"
+      counter=""; insert; return 1
+    fi
+    n=`expr $counter + ${#files[@]} - 1`
+    counter=(`seq -w $counter 1 $n`)
+  fi
   case $pos in
     end) p=${#1} ;;
     end-ext) noext=${1%.*}; p=${#noext} ;;
-    *)
-      if test $pos -ge 0 2>/dev/null; then
-        p=$pos
-      else
-        err "$pos is an invalid position"
-      fi ;;
+    *) p=$pos ;;
   esac
   if [[ $counter ]]; then
-    c=${counter[$n]}
-    ((n++))
+    c=${counter[$j]}
+    ((j++))
     x1=${x//%/$c}
     newname=${1:0:$p}$x1${1:$p}
   else
@@ -89,20 +125,32 @@ function insert {
   }
 
 function remove {
+  echo -ne $none
+  if [[ -z $p ]]; then
+    echo -e "Use ${green}0${none} for the beginning of name"
+    echo -ne $green
+    read -p "Enter p (remove position, p >= 0, required): " p
+    if ! test $p -ge 0 2>/dev/null; then
+      err "$p is invalid"
+      p=""; remove; return 1
+    fi
+  fi
+  [[ $j ]] || read -p "Enter n (number of characters to remove; leave blank to remove all after p): " n
+  j=1
   x=${1:$p:$n}
   newname=${1//$x/}
   }
 
 function err {
-  echo -e "$red$@$none"; exit 1
+  echo -e "$red$@$none"; echo; return 1
   }
 
 function preview {
-  echo "Below is a preview of the changes:"
-  echo -e $yellow
+  echo -e $none
+  echo -e "${bold}Changes preview:"
   for i; do
     $cmd "$i" || continue
-    echo "$i -> $newname"
+    echo -e "$yellow$i -> $bold$newname$none"
   done
   }
 
@@ -125,9 +173,13 @@ yellow='\e[0;33m'
 bold='\e[1m'
 none='\e[0m'
 if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
-  echo "usage: ${0##*/} filename1 filename2 ....."; exit
+  echo "File Rename Features: space to underscore and vice versa, all uppercase, all lowercase, uppercase the first word, convert x to y, insert counter or character, and remove number of character."
+  echo
+  echo -e "${bold}Usage: ${0##*/} filename1 filename2 ..... $none"
+  exit
 fi
-
+files=("$@")
+echo -e "$blue$bold---Image Tools---"
 menu "Space to underscore _" "Underscore _ to space" "All UPPERCASE" "all lowercase" "Capital First Word" "Convert x to y" "Insert counter n and/or character x at position p" "Remove n number of characters at position p"
 case $? in
   0) cmd=space2underscore ;;
@@ -135,46 +187,13 @@ case $? in
   2) cmd=upper ;;
   3) cmd=lower ;;
   4) cmd=upperfirst ;;
-  5) cmd=x2y
-    echo -e "Use wildcard ${green}?${none} to match any one character or ${green}*${none} to match all characters"
-    echo -ne $green
-    read -p "Enter x (value to find, required): " x
-    [[ $x ]] || err "x is required"
-    read -p "Enter y (value to convert to, optional): " y
-    echo -e $none ;;
-  6) cmd=insert
-    echo -e "Use ${green}0${none} for the beginning of name, ${green}end${none} for the end of name, or ${green}end-ext${none} for the end of name but keep extension."
-    echo -ne $green
-    read -p "Enter p (insert position, required): " pos
-    if ! test $pos -ge 0 2>/dev/null  && [[ $pos != end* ]]; then err "$pos is invalid"; fi
-    echo -e $none
-    echo -e "Use ${green}%${none} to insert counter."
-    echo -e $green
-    read -p "Enter x (character to insert, required): " x
-    [[ $x ]] || err "x is required"
-    echo -e $none
-    if [[ $x = *%* ]]; then
-      echo
-      echo "Include the number of digits desire in start counter (i.e. for 3 digits counter and starting at 1, enter: 001)"
-      echo -e $green
-      read -p "Enter start counter n (n >= 0, required): " counter
-      echo -e $none
-      test $counter -ge 0 2>/dev/null || err "$counter is invalid"
-      n=`expr $counter + $# - 1`
-      counter=(`seq -w $counter 1 $n`)
-      n=0
-    fi ;;
-  7) cmd=remove
-    echo -e "Use ${green}0${none} for the beginning of name"
-    echo -e $green
-    read -p "Enter p (remove position, p >= 0, required): " p
-    test $p -ge 0 2>/dev/null || err "$p is invalid"
-    read -p "Enter n (number of characters to remove, n > 0, required): " n
-    test $n -gt 0 2>/dev/null || err "$n is invalid"
-    echo -e $none ;;
+  5) cmd=x2y ;;
+  6) cmd=insert ;;
+  7) cmd=remove ;;
 esac
-preview "$@"
+$cmd
+preview "${files[@]}"
 echo -e $green
 read -p "Do you want to proceed with rename (Y/n)? " i
 echo -e $none
-[[ $i = n ]] || changename "$@"
+[[ $i = n ]] || changename "${files[@]}"
