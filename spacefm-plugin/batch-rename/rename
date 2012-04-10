@@ -157,7 +157,9 @@ function changename {
     echo -e $green
     read -p "Do you want to proceed with rename (Y/n)? " proceed
     echo -e $none
-    if [[ $proceed != n ]]; then
+    if [[ $proceed = n ]]; then
+      mainmenu
+    else
       for i in "${files[@]}"; do
         $cmd "$i" || continue
         if [[ -d $i ]] && [[ $cmd = upper* || $cmd = lower ]]; then
@@ -168,9 +170,11 @@ function changename {
         fi
       done
     fi
+  else
+    mainmenu
   fi
-  mainmenu
   }
+
 
 function mainmenu {
   menutitle="---Image Tools---"
