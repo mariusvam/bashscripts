@@ -189,7 +189,7 @@ function mainmenu {
     6) cmd=insert ;;
     7) cmd=remove ;;
   esac
-  changename ${files[@]}
+  changename
   }
 
 blue='\e[0;34m'
@@ -213,6 +213,6 @@ if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
   exit
 fi
 case $1 in
-  --*) cmd=${1#--}; shift; files=("$@"); changename ${files[@]} ;;
+  --*) cmd=${1#--}; shift; files=("$@"); changename ;;
   *) files=("$@"); mainmenu ;;
 esac
