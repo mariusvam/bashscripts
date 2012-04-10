@@ -36,11 +36,11 @@ function menu {
   fi
   }
 
-function space2underscore {
+function space2_ {
   newname=${1// /_}
   }
 
-function underscore2space {
+function _2space {
   newname=${1//_/ }
   }
 
@@ -146,25 +146,46 @@ function err {
   echo -e "$red$@$none"; echo; return 1
   }
 
-function preview {
-  echo -e $none
-  echo -e "${bold}Changes preview:"
-  for i; do
-    $cmd "$i" || continue
-    echo -e "$yellow$i -> $bold$newname$none"
-  done
+function changename {
+  if $cmd; then
+    echo -e $none
+    echo -e "${bold}Changes preview:"
+    for i in "${files[@]}"; do
+      $cmd "$i" || continue
+      echo -e "$yellow$i -> $bold$newname"
+    done
+    echo -e $green
+    read -p "Do you want to proceed with rename (Y/n)? " proceed
+    echo -e $none
+    if [[ $proceed != n ]]; then
+      for i in "${files[@]}"; do
+        $cmd "$i" || continue
+        if [[ -d $i ]] && [[ $cmd = upper* || $cmd = lower ]]; then
+          mv "$i" "$newname$$"
+          mv "$newname$$" "$newname"
+        else
+          mv "$i" "$newname"
+        fi
+      done
+    fi
+  fi
+  mainmenu
   }
 
-function changename {
-    for i; do
-    $cmd "$i" || continue
-    if [[ -d $i ]] && [[ $cmd = upper || $cmd = lower || $cmd = upperfirst ]]; then
-      mv "$i" "$newname$$"
-      mv "$newname$$" "$newname"
-    else
-      mv "$i" "$newname"
-    fi
-  done
+function mainmenu {
+  menutitle="---Image Tools---"
+  menu "Space_to_underscore" "Underscore to space" "ALL UPPERCASE" "all lowercase" "Capital First Word" "Convert x to y" "Insert counter n and/or character x at position p" "Remove n number of characters at position p"
+  case $? in
+    0) cmd=space2_ ;;
+    1) cmd=_2space ;;
+    2) cmd=upper ;;
+    3) cmd=lower ;;
+    4) cmd=upperfirst ;;
+    5) cmd=x2y ;;
+    6) cmd=insert ;;
+    7) cmd=remove ;;
+  esac
+  changename ${files[@]}
   }
 
 blue='\e[0;34m'
@@ -174,27 +195,20 @@ yellow='\e[0;33m'
 bold='\e[1m'
 none='\e[0m'
 if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
-  echo "File Rename Features: space to underscore and vice versa, all uppercase, all lowercase, uppercase the first word, convert x to y, insert counter or character, and remove number of character."
-  echo
-  echo -e "${bold}Usage: ${0##*/} filename1 filename2 ..... $none"
+  echo -e $bold
+  echo -e "Usage: ${0##*/} [options] filename1 filename2 ..... $none"
+  echo "Options: renaming menu will show if option is not specified"
+  echo "  --space2_     convert_space_to_underscore"
+  echo "  --_2space     convert underscore to space"
+  echo "  --upper       CONVERT ALL TO UPPERCASE"
+  echo "  --lower       convert all to lowercase"
+  echo "  --upperfirst  Convert First Letter Of A Word To Uppercase"
+  echo "  --x2y         Convert x to y"
+  echo "  --insert      Insert counter or characters at a specific position"
+  echo "  --remove      Remove numbers of characters at a specific position"
   exit
 fi
-files=("$@")
-menutitle="---Image Tools---"
-menu "Space to underscore _" "Underscore _ to space" "All UPPERCASE" "all lowercase" "Capital First Word" "Convert x to y" "Insert counter n and/or character x at position p" "Remove n number of characters at position p"
-case $? in
-  0) cmd=space2underscore ;;
-  1) cmd=underscore2space ;;
-  2) cmd=upper ;;
-  3) cmd=lower ;;
-  4) cmd=upperfirst ;;
-  5) cmd=x2y ;;
-  6) cmd=insert ;;
-  7) cmd=remove ;;
+case $1 in
+  --*) cmd=${1#--}; shift; files=("$@"); changename ${files[@]} ;;
+  *) files=("$@"); mainmenu ;;
 esac
-$cmd
-preview "${files[@]}"
-echo -e $green
-read -p "Do you want to proceed with rename (Y/n)? " i
-echo -e $none
-[[ $i = n ]] || changename "${files[@]}"
