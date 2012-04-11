@@ -175,33 +175,33 @@ function changename {
   fi
   }
 
-
 function mainmenu {
-  menutitle="---Image Tools---"
-  menu "Space_to_underscore" "Underscore to space" "ALL UPPERCASE" "all lowercase" "Capital First Word" "Convert x to y" "Insert counter n and/or character x at position p" "Remove n number of characters at position p"
-  case $? in
-    0) cmd=space2_ ;;
-    1) cmd=_2space ;;
-    2) cmd=upper ;;
-    3) cmd=lower ;;
-    4) cmd=upperfirst ;;
-    5) cmd=x2y ;;
-    6) cmd=insert ;;
-    7) cmd=remove ;;
-  esac
+  if [[ -z $1 ]]; then
+    menutitle="---Image Tools---"
+    menu "Space_to_underscore" "Underscore to space" "ALL UPPERCASE" "all lowercase" "Capital First Word" "Convert x to y" "Insert counter n and/or character x at position p" "Remove n number of characters at position p"
+    case $? in
+      0) cmd=space2_ ;;
+      1) cmd=_2space ;;
+      2) cmd=upper ;;
+      3) cmd=lower ;;
+      4) cmd=upperfirst ;;
+      5) cmd=x2y ;;
+      6) cmd=insert ;;
+      7) cmd=remove ;;
+    esac
+  fi
   changename
   }
 
-blue='\e[0;34m'
-green='\e[0;32m'
-red='\e[0;31m'
-yellow='\e[0;33m'
-bold='\e[1m'
-none='\e[0m'
+blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
+case $1 in
+  --*) cmd=${1#--}; shift; files=("$@") ;;
+  *) files=("$@") ;;
+esac
 if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
   echo -e $bold
   echo -e "Usage: ${0##*/} [options] filename1 filename2 ..... $none"
-  echo "Options: renaming menu will show if option is not specified"
+  echo "Options: menu is shown if option is not specified"
   echo "  --space2_     convert_space_to_underscore"
   echo "  --_2space     convert underscore to space"
   echo "  --upper       CONVERT ALL TO UPPERCASE"
@@ -212,7 +212,4 @@ if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
   echo "  --remove      Remove numbers of characters at a specific position"
   exit
 fi
-case $1 in
-  --*) cmd=${1#--}; shift; files=("$@"); changename ;;
-  *) files=("$@"); mainmenu ;;
-esac
+mainmenu $cmd
