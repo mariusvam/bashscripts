@@ -36,7 +36,24 @@ function menu {
   fi
   }
 
-function mergepdf {
+function mainmenu {
+  if [[ -z $1 ]]; then
+    menutitle="---PDF Tools---"
+    menu "PDF Merge" "PDF Split" "PDF Extract" "PDF to JPG" "PDF to Text"
+    case $? in
+      0) merge ;;
+      1) split ;;
+      2) extract ;;
+      3) 2jpg ;;
+      4) 2txt ;;
+    esac
+  else
+    $cmd
+  fi
+  mainmenu
+  }
+
+function merge {
   if [[ $# -lt 2 ]]; then
     echo "${red}Select at least 2 or more PDF files to merge"
     exit 1
@@ -47,7 +64,7 @@ function mergepdf {
   [[ $f && $f != *.pdf ]] && f=$f.pdf || f=merged.pdf
   [[ -e $f ]] && f=${f%.*}-`date +%s`.pdf
   mkdir -p `dirname "$f"`
-  gs -o -q -sDEVICE=pdfwrite -sOutputFile="$f" "$@"
+  gs -o -q -sDEVICE=pdfwrite -sOutputFile="$f" "${files[@]}"
   if [[ $? -eq 0 ]]; then
     echo -e $green
     read -p "Remove $* (Y/n)? " i
@@ -55,8 +72,8 @@ function mergepdf {
   fi
   }
 
-function splitpdf {
-  for i; do
+function split {
+  for i in "${files[@]}"; do
     totalp=`gs -q -dNODISPLAY -c "($i) (r) file runpdfbegin pdfpagecount = quit"`
     for (( p=1; p<=$totalp; p++ )); do
       gs -o -q -sDEVICE=pdfwrite -dFirstPage=$p -dLastPage=$p -sOutputFile="${i%.*}-p$p.pdf" "$i"
@@ -64,7 +81,7 @@ function splitpdf {
   done
   }
 
-function extractpdf {
+function extract {
   echo -e "Use ${green}space$none for separating pages, ${green}dash$none for range of pages, and ${green}end$none for the last page.  For example, to extract pages 1, 5, and 8 to the last page, enter: ${green}1 5 8-end"
   read -p "Enter page: " -a p
   echo -e $none
@@ -81,7 +98,7 @@ function extractpdf {
   done
   tmpdir=/tmp/pdfextract
   mkdir -p $tmpdir
-  for i; do
+  for i in "${files[@]}"; do
     pages=`gs -q -dNODISPLAY -c "($i) (r) file runpdfbegin pdfpagecount = quit"`
     for j in ${p[@]}; do
       if [[ $j = *-* ]]; then
@@ -104,37 +121,31 @@ function extractpdf {
   done
   }
 
-function pdf2jpg {
-  for i; do
+function 2jpg {
+  for i in "${files[@]}"; do
     gs -o -q -sDEVICE=jpeg -sOutputFile="${i%.*}-p%d.jpg" "$i"
   done
   }
 
-function pdf2txt {
-  for i; do
+function 2txt {
+  for i in "${files[@]}"; do
     gs -o -q -sDEVICE=txtwrite -sOutputFile="${i%.*}.txt" "$i"
   done
   }
 
-blue='\e[0;34m'
-green='\e[0;32m'
-red='\e[0;31m'
-yellow='\e[0;33m'
-bold='\e[1m'
-none='\e[0m'
+blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
+case $1 in
+  --*) cmd=${1#--}; shift; files=("$@") ;;
+  *) files=("$@") ;;
+esac
 if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
-  echo "PDF Tools Features: merge pdf files, spit or extract pages from pdf files, and convert pdf files to image or text."
-  echo
-  echo -e "${bold}Usage: ${0##*/} pdf1 pdf2 ..... $none"
+  echo -e "${bold}Usage: ${0##*/} [option] pdf1 pdf2 ..... $none"
+  echo "Options: menu is shown if option is not specified"
+  echo "  --merge    combine 2 or more pdf files to one"
+  echo "  --split    split pdf file to individual page"
+  echo "  --extract  extract page and/or range of pages from pdf file"
+  echo "  --2jpg     convert pdf page to jpg"
+  echo "  --2txt     convert text portion of pdf file to text"
   exit
 fi
-menutitle="---PDF Tools---"
-menu "PDF Merge" "PDF Split" "PDF Extract" "PDF to JPG" "PDF to Text"
-case $? in
-  0) mergepdf "$@" ;;
-  1) splitpdf "$@" ;;
-  2) extractpdf "$@" ;;
-  3) pdf2jpg "$@" ;;
-  4) pdf2txt "$@" ;;
-esac
-echo -ne $none
+mainmenu $cmd
