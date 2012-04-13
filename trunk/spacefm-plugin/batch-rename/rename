@@ -18,6 +18,7 @@ COMMENT
 function menu {
   n=0
   choices=("$@")
+  echo
   echo -e "$blue$bold$menutitle"
   for i in "${choices[@]}"; do
     echo "$((n++)))   $i"
@@ -31,7 +32,6 @@ function menu {
     echo -e $none; choice=${choices[i]}; return $i
   else
     echo -e "$red$i is an invalid entry...please try again!"
-    echo -e $none
     menu "${choices[@]}"
   fi
   }
@@ -193,12 +193,7 @@ function mainmenu {
   changename
   }
 
-blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
-case $1 in
-  --*) cmd=${1#--}; shift; files=("$@") ;;
-  *) files=("$@") ;;
-esac
-if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
+function usage {
   echo -e $bold
   echo -e "Usage: ${0##*/} [options] filename1 filename2 ..... $none"
   echo "Options: menu is shown if option is not specified"
@@ -211,5 +206,13 @@ if [[ $# -eq 0 || $1 = -h* || $1 = --h* ]]; then
   echo "  --insert      Insert counter or characters at a specific position"
   echo "  --remove      Remove numbers of characters at a specific position"
   exit
-fi
+  }
+
+blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
+case $1 in
+  -h|--h*) usage ;;
+  --*) cmd=${1#--}; shift; files=("$@") ;;
+  *) files=("$@") ;;
+esac
+[[ $# -eq 0 ]] && usage
 mainmenu $cmd
