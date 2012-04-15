@@ -18,14 +18,15 @@ COMMENT
 function menu {
   n=0
   choices=("$@")
-  echo
-  echo -e "$blue$bold$menutitle"
+  echo -e "$blue$bold"
+  echo "$menutitle"
   for i in "${choices[@]}"; do
     echo "$((n++)))   $i"
   done
-  echo "c|q) Cancel"
+  echo -n "c|q) Cancel"
+  echo -e $none
   echo -e $green
-  read -p "Enter a number from menu: " i
+  read -p "Enter a choice from above menu: " i
   if [[ $i = c ]] || [[ $i = q ]]; then
     echo -e $none; exit 1
   elif test $i -lt $n 2>/dev/null; then
@@ -208,7 +209,7 @@ function usage {
   exit
   }
 
-blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
+blue='\e[47;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 case $1 in
   -h|--h*) usage ;;
   --*) cmd=${1#--}; shift; files=("$@") ;;
