@@ -77,7 +77,7 @@ function customcmd {
   echo -e $none
   if [[ $cstcmd ]]; then
     for i in "${files[@]}"; do
-      cstcmd=${cstcmd//%f/$i}
+      cstcmd=${cstcmd//%f/\'$i\'}
       eval $cstcmd
     done
   else
@@ -207,8 +207,8 @@ function bysize {
   }
 
 function bytime {
-  echo -e "Enter time in term of day.  For example, find file modified less than a day, enter: ${green}1"
-  read -p "Enter last modified day: " day
+  echo -e "Find files modified n day ago.  For example, find file modified a day ago, enter: ${green}1"
+  read -p "Enter day: " day
   echo -ne $none
   if test $day -gt 0 2>/dev/null; then
     oIFS=$IFS; IFS=$'\n'
