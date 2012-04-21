@@ -1,0 +1,50 @@
+#!/bin/bash
+. /etc/rc.conf
+. /etc/rc.d/functions
+
+prog=tmpfs-sync
+progpath=/usr/share/$prog/$prog
+daemon=/run/daemons/$prog
+
+case "$1" in
+  start)
+    stat_busy "Starting $prog"
+
+    if [[ -f $daemon ]]; then
+      printf "\n${C_FAIL}Error:${C_CLEAR} $prog is already running!"
+      stat_fail && exit 1
+    fi
+    add_daemon $prog
+    $progpath start
+    stat_done
+    ;;
+  stop)
+    stat_busy "Stopping $prog"
+    if [[ -f $daemon ]]; then
+      $progpath stop
+      rm_daemon $prog
+      stat_done
+    else
+      printf "\n${C_FAIL}Error:${C_CLEAR} $prog is not running, nothing to stop!"
+      stat_fail
+    fi
+    ;;
+  sync)
+    stat_busy 'Syncing tmpfs to disk'
+    if [[ -f $daemon ]]; then
+      $progpath sync
+      stat_done
+    else
+      printf "\n${C_FAIL}Error:${C_CLEAR} $prog is not running... cannot sync!"
+      stat_fail
+    fi
+    ;;
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  *)
+    echo "usage $0 {start|stop|sync|restart}"
+esac
+exit 0
