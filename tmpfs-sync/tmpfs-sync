@@ -1,0 +1,119 @@
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+function sync() {
+  for i in "${folders_as_user[@]}"; do
+    backup=$i-backup
+    tmp=$tmpfs/${i##*/}
+    if [[ `readlink "$i"` = "$tmp" ]]; then
+      echo "Syncing $i ...."
+      su -c "rsync -a --delete '$i/' '$backup/'" $user
+    else
+      echo -e "${red}Sync failed...$i is not in tmpfs $none"
+    fi
+  done
+  for i in "${folders_as_root[@]}"; do
+    backup=$i-backup
+    tmp=$tmpfs/${i##*/}
+    if [[ `readlink "$i"` = "$tmp" ]]; then
+      echo "Syncing $i ...."
+      rsync -a --delete "$i/" "$backup/"
+    else
+      echo -e "${red}Sync failed...$i is not in tmpfs $none"
+    fi
+  done
+  }
+
+function stopsync(){
+  sync
+  echo "Stoping tmpfs-sync ...."
+  folders=("${folders_as_user[@]}" "${folders_as_root[@]}")
+  for i in "${folders[@]}"; do
+    backup=$i-backup
+    tmp=$tmpfs/${i##*/}
+    if [[ `readlink "$i"` = "$tmp" ]]; then
+      rm -f "$i"
+      [[ -e $backup ]] && mv "$backup" "$i"
+      [[ -e $tmp ]] && rm -rf "$tmp"
+      echo "stop $i done"
+    fi
+  done
+  }
+
+function startsync(){
+  echo "Starting tmpfs-sync ...."
+  for i in "${folders_as_user[@]}"; do
+    backup=$i-backup
+    tmp=$tmpfs/${i##*/}
+    [[ `readlink "$i"` = "$tmp" ]] && continue
+    [[ -h $i ]] && rm -f "$i"
+    [[ -e $backup ]] && mv "$backup" "$i"
+    su -c "cp -a '$i' '$tmp'" $user
+    mv "$i" "$backup"
+    su -c "ln -s '$tmp' '$i'" $user
+    echo "start $i done"
+  done
+  for i in "${folders_as_root[@]}"; do
+    backup=$i-backup
+    tmp=$tmpfs/${i##*/}
+    [[ `readlink "$i"` = "$tmp" ]] && continue
+    [[ -h $i ]] && rm -f "$i"
+    [[ -e $backup ]] && mv "$backup" "$i"
+    cp -a "$i" "$tmp"
+    mv "$i" "$backup"
+    ln -s "$tmp" "$i"
+    echo "start $i done"
+  done
+  }
+
+function usage {
+  echo -e "${bold}Usage: $0 [--config config_file_path] readme|start|sync|stop $none"
+  exit 1
+  }
+
+red='\e[0;31m'; bold='\e[1m'; none='\e[0m'
+
+if [[ $1 = --config ]]; then
+  config=$2
+  shift 2
+elif [[ $1 = readme ]]; then
+  cat "$0.readme"
+  exit 0
+fi
+if ! source ${config:=/etc/conf.d/tmpfs-sync}; then
+  echo -e "${red}Problem sourcing config file.  Please refer to readme to create config file $none"
+  usage
+fi
+if ! mount | grep -q "$tmpfs type tmpfs"; then
+  echo -e "$red$tmpfs is not mounted as tmpfs $none"
+  exit 1
+fi
+if [[ $folders_as_user && -z $user ]]; then
+  echo -e "${red}There are folders to be synced as user but user is not defined in $config $none"
+  exit 1
+elif [[ $folders_as_user ]] && ! cat /etc/passwd | grep -q "$user:"; then
+  echo -e "${red}user $user does not exist $none"
+  exit 1
+fi
+
+case "$1" in
+  start) startsync  ;;
+  stop) stopsync ;;
+  sync) sync ;;
+  *) usage ;;
+esac
