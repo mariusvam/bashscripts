@@ -1,0 +1,61 @@
+README for tmpfs-sync v0.1
+
+AUTHOR
+  Tri Le <trile7 at gmail dot com>
+
+SOURCE
+  tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
+  scripts can be viewed at http://code.google.com/p/bashscripts/source/browse/trunk/tmpfs-sync
+  aur package http://aur.archlinux.org/packages.php?ID=58684
+
+DEPENDENCIES
+  coreutils, rsync
+
+INSTALL
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from http://aur.archlinux.org/packages/tm/tmpfs-sync/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
+  - tmpfs-sync files will be installed in the following locations: /usr/share/tmpfs-sync, /etc/rc.d, and /etc/conf.d
+
+FEATURE
+  - Create storage for directories in tmpfs and sync them to physical disk on demand or when daemon stop
+
+DESCRIPTION
+  Usage: tmpfs-sync [--config config_file_path] readme|start|sync|stop
+
+  readme command displays this file and then exit
+
+  start command copies directories to tmpfs, renames them by adding "-backup" to the end of the name, and then creates symbolic links of the directories to tmpfs.  For example, put /var/log in tmpfs (/tmp)
+  - copy /var/log to /tmp/log
+  - rename /var/log to /var/log-backup
+  - symbolic link /var/log to /tmp/log
+
+  sync command uses rsync to copy changes in tmpfs to physical disk.  For the above example, it copies changes in /tmp/log to /var/log-backup
+
+  stop command syncs tmpfs to physical disk, and then remove tmpfs, symbolic link, and "-backup" from the end of the name.  For the above example
+  - sync changes in /tmp/log to /var/log-backup
+  - remove /tmp/log and /var/log
+  - rename /var/log-backup to /var/log
+
+  tmpfs-sync should be run as daemon (see tmpfs-sync.rc script) so that it can start and stop properly with the system.  For example, tmpfs-sync runs on system bootup and sync and stop before system power down.  If you'd like to sync changes more often, you can run the sync command manually or add it to cron job (i.e. "/etc/rc.d/tmpfs-sync sync").  You must run the sync command as root if there are folders to be synced as root.
+
+  By default config file is /etc/conf.d/tmpfs-sync.  Custom config file can be specified by using --config parameter.  Config file contains 4 variables: tmpfs, user, folders_as_user, and folders_as_root
+  - tmpfs is the location where tmpfs is mounted.  Default is /tmp
+  - user is username that you want to use for folders to be synced as user
+  - folders_as_user is an array of folders to be synced as user.  I recommend the followings: /home/user/.cache, /home/user/.mozilla (firefox profile), /home/user/.config/chromium (chromium profile), /home/user/.config/google-chrome (google chrome profile).
+  - folders_as_root is an array of folders to be synced as root.  I recommend /var/log
+
+COPYING
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
