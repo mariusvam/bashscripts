@@ -17,22 +17,11 @@
 COMMENT
 
 function sync() {
-  for i in "${folders_as_user[@]}"; do
+  for i in "${sync_folders[@]}"; do
     backup=$i-backup
-    tmp=$tmpfs/${i##*/}
+    tmp=$tmpfs/${i//\//_}
     if [[ `readlink "$i"` = "$tmp" ]]; then
-      echo "Syncing $i ...."
-      su -c "rsync -a --delete '$i/' '$backup/'" $user
-    else
-      echo -e "${red}Sync failed...$i is not in tmpfs $none"
-    fi
-  done
-  for i in "${folders_as_root[@]}"; do
-    backup=$i-backup
-    tmp=$tmpfs/${i##*/}
-    if [[ `readlink "$i"` = "$tmp" ]]; then
-      echo "Syncing $i ...."
-      rsync -a --delete "$i/" "$backup/"
+      rsync -a --delete "$i/" "$backup/" && echo "$i synced"
     else
       echo -e "${red}Sync failed...$i is not in tmpfs $none"
     fi
@@ -42,42 +31,27 @@ function sync() {
 function stopsync(){
   sync
   echo "Stoping tmpfs-sync ...."
-  folders=("${folders_as_user[@]}" "${folders_as_root[@]}")
-  for i in "${folders[@]}"; do
+  for i in "${sync_folders[@]}"; do
     backup=$i-backup
-    tmp=$tmpfs/${i##*/}
+    tmp=$tmpfs/${i//\//_}
     if [[ `readlink "$i"` = "$tmp" ]]; then
       rm -f "$i"
       [[ -e $backup ]] && mv "$backup" "$i"
       [[ -e $tmp ]] && rm -rf "$tmp"
-      echo "stop $i done"
+      echo "$i stopped"
     fi
   done
   }
 
 function startsync(){
   echo "Starting tmpfs-sync ...."
-  for i in "${folders_as_user[@]}"; do
+  for i in "${sync_folders[@]}"; do
     backup=$i-backup
-    tmp=$tmpfs/${i##*/}
+    tmp=$tmpfs/${i//\//_}
     [[ `readlink "$i"` = "$tmp" ]] && continue
     [[ -h $i ]] && rm -f "$i"
     [[ -e $backup ]] && mv "$backup" "$i"
-    su -c "cp -a '$i' '$tmp'" $user
-    mv "$i" "$backup"
-    su -c "ln -s '$tmp' '$i'" $user
-    echo "start $i done"
-  done
-  for i in "${folders_as_root[@]}"; do
-    backup=$i-backup
-    tmp=$tmpfs/${i##*/}
-    [[ `readlink "$i"` = "$tmp" ]] && continue
-    [[ -h $i ]] && rm -f "$i"
-    [[ -e $backup ]] && mv "$backup" "$i"
-    cp -a "$i" "$tmp"
-    mv "$i" "$backup"
-    ln -s "$tmp" "$i"
-    echo "start $i done"
+    cp -a "$i" "$tmp" && mv "$i" "$backup" && ln -s "$tmp" "$i" && echo "$i started"
   done
   }
 
@@ -95,19 +69,12 @@ elif [[ $1 = readme ]]; then
   cat "$0.readme"
   exit 0
 fi
-if ! source ${config:=/etc/conf.d/tmpfs-sync}; then
+if ! source ${config:=$0.cfg}; then
   echo -e "${red}Problem sourcing config file.  Please refer to readme to create config file $none"
   usage
 fi
 if ! mount | grep -q "$tmpfs type tmpfs"; then
   echo -e "$red$tmpfs is not mounted as tmpfs $none"
-  exit 1
-fi
-if [[ $folders_as_user && -z $user ]]; then
-  echo -e "${red}There are folders to be synced as user but user is not defined in $config $none"
-  exit 1
-elif [[ $folders_as_user ]] && ! cat /etc/passwd | grep -q "$user:"; then
-  echo -e "${red}user $user does not exist $none"
   exit 1
 fi
 
