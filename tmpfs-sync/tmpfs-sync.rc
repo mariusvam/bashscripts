@@ -3,20 +3,24 @@
 . /etc/rc.d/functions
 
 prog=tmpfs-sync
-progpath=/usr/share/$prog/$prog
+progpath="/usr/share/$prog/$prog --config /etc/conf.d/tmpfs-sync"
 daemon=/run/daemons/$prog
-
+if [[ ! -w /run/daemons ]]; then
+  printf "\n${C_FAIL}Error:${C_CLEAR} Must run this as root!"
+  stat_fail
+  exit 1
+fi
 case "$1" in
   start)
     stat_busy "Starting $prog"
-
     if [[ -f $daemon ]]; then
       printf "\n${C_FAIL}Error:${C_CLEAR} $prog is already running!"
-      stat_fail && exit 1
+      stat_fail
+    else
+      add_daemon $prog
+      $progpath start
+      stat_done
     fi
-    add_daemon $prog
-    $progpath start
-    stat_done
     ;;
   stop)
     stat_busy "Stopping $prog"
@@ -45,6 +49,5 @@ case "$1" in
     $0 start
     ;;
   *)
-    echo "usage $0 {start|stop|sync|restart}"
+    echo "usage $0 {start|stop|sync|restart}" ;;
 esac
-exit 0
