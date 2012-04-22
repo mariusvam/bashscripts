@@ -1,4 +1,4 @@
-README for tmpfs-sync v0.1
+README for tmpfs-sync v0.2
 
 AUTHOR
   Tri Le <trile7 at gmail dot com>
@@ -18,7 +18,8 @@ INSTALL
   - tmpfs-sync files will be installed in the following locations: /usr/share/tmpfs-sync, /etc/rc.d, and /etc/conf.d
 
 FEATURE
-  - Create storage for directories in tmpfs and sync them to physical disk on demand or when daemon stop
+  - Speed up data access and reduce read/write to SSD by move directories to tmpfs and sync them to physical disk on demand or when daemon stop
+  - Use with any directory.
 
 DESCRIPTION
   Usage: tmpfs-sync [--config config_file_path] readme|start|sync|stop
@@ -37,13 +38,11 @@ DESCRIPTION
   - remove /tmp/log and /var/log
   - rename /var/log-backup to /var/log
 
-  tmpfs-sync should be run as daemon (see tmpfs-sync.rc script) so that it can start and stop properly with the system.  For example, tmpfs-sync runs on system bootup and sync and stop before system power down.  If you'd like to sync changes more often, you can run the sync command manually or add it to cron job (i.e. "/etc/rc.d/tmpfs-sync sync").  You must run the sync command as root if there are folders to be synced as root.
+  tmpfs-sync should be run as root and daemon (see tmpfs-sync.rc script) so that it can start and stop properly with the system.  For example, tmpfs-sync runs on system bootup and sync and stop before system power down.  If you'd like to sync changes more often, you can run the sync command manually or add it to cron job (i.e. "/etc/rc.d/tmpfs-sync sync").
 
-  By default config file is /etc/conf.d/tmpfs-sync.  Custom config file can be specified by using --config parameter.  Config file contains 4 variables: tmpfs, user, folders_as_user, and folders_as_root
-  - tmpfs is the location where tmpfs is mounted.  Default is /tmp
-  - user is username that you want to use for folders to be synced as user
-  - folders_as_user is an array of folders to be synced as user.  I recommend the followings: /home/user/.cache, /home/user/.mozilla (firefox profile), /home/user/.config/chromium (chromium profile), /home/user/.config/google-chrome (google chrome profile).
-  - folders_as_root is an array of folders to be synced as root.  I recommend /var/log
+  By default config filename is tmpfs-sync.cfg located in the same folder as the command.  Custom config file can be specified by using --config parameter.  Config file contains 2 variables: tmpfs and sync_folders
+  - tmpfs is the location where tmpfs is mounted.  Default is /tmp.  You can find where tmpfs is mounted by running "mount | grep type.tmpfs"
+  - sync_folders is an array of folders (fullpath) to be moved to tmpfs and sync to physical disk on demand.  I'd recommend the following folders: /home/user/.cache, /home/user/.mozilla (firefox profile), /home/user/.config/chromium (chromium profile), /home/user/.config/google-chrome (google chrome profile), and /var/log
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
