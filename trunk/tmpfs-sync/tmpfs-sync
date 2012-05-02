@@ -21,7 +21,8 @@ function sync() {
     backup=$i-backup
     tmp=$tmpfs/${i//\//_}
     if [[ `readlink "$i"` = "$tmp" ]]; then
-      rsync -a --delete "$i/" "$backup/" && echo "$i synced"
+      [[ -d $i ]] && rsync -a --delete "$tmp/" "$backup/" ||  rsync "$tmp" "$backup"
+      [[ $? -eq 0 ]] && echo "$i synced"
     else
       echo -e "${red}Sync failed...$i is not in tmpfs $none"
     fi
@@ -35,7 +36,7 @@ function stopsync(){
     backup=$i-backup
     tmp=$tmpfs/${i//\//_}
     if [[ `readlink "$i"` = "$tmp" ]]; then
-      rm -f "$i"
+      rm -rf "$i"
       [[ -e $backup ]] && mv "$backup" "$i"
       [[ -e $tmp ]] && rm -rf "$tmp"
       echo "$i stopped"
