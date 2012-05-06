@@ -366,10 +366,8 @@ case $1 in
   device) devicemenu ;;
   hist) histmenu ;;
   unmount) unmountmenu ;;
-  readme) cat "$0.readme" ;;
   -h|*help)
     echo "$0                      #show main menu"
-    echo "$0 readme               #display readme"
     echo "$0 image file_paths     #mount image file (iso,img,etc.)"
     echo "$0 sshfs                #mount via sshfs"
     echo "$0 ftpfs                #mount via curlftpfs"
