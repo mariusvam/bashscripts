@@ -1,0 +1,86 @@
+README for mnttools v0.1
+
+AUTHOR
+  Tri Le <trile7 at gmail dot com>
+
+SOURCE
+  tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
+  scripts can be viewed at http://code.google.com/p/bashscripts/source/browse/trunk/mnttools
+  aur package http://aur.archlinux.org/packages.php?ID=59050
+
+DEPENDENCIES
+  Required: coreutils, procps-ng, grep, sudo, util-linux, bash
+  Optional: yad - display trayicon
+  Optional: lsof - list open files
+  Optional: smbclient - browse and mount Samba/Windows network
+  Optional: sshfs - mount SSH
+  Optional: curlftpfs - mount FTP
+
+INSTALL
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from https://aur.archlinux.org/packages/mn/mnttools/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
+
+FEATURE
+  - Automount usb drive or sd card via udev rules
+  - Mount image file (i.e. iso, img, etc.)
+  - Browse and mount Samba/Windows share
+  - Mount SSH
+  - Mount FTP
+  - Mount devices on computer (i.e. optical disc, unmounted partition/drive, etc.)
+  - Save network mounts in history for quick access
+
+DESCRIPTION
+  Usage: mnttools [--config config_file_path] [command]
+
+  Configuration file contains the following variables: mntroot, save_history, history_file, general_mntopts, sshfs_mntopts, ftpfs_mntopts, cifs_mntopts, and winfs_mntopts.  Default for these variables are:
+
+  - mntroot=/media #directory for mounting media.  You must have read/write/execute to this directory (i.e. "sudo chmod 777 /media")
+  - save_history=true #whether or not to save mount parameters for Samba, SSH, and FTP mounts
+  - history_file=$HOME/.mnttools_history #location of history file
+  - general_mntopts=noatime #mount options for all mount types
+  - winfs_mntopts=gid=100,umask=002 #mount options for vfat and ntfs filesystems
+  - sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=100,umask=002 #mount options for ssh share
+  - ftpfs_mntopts=gid=100,umask=002 #mount options for ftp share
+  - cifs_mntopts=gid=100 #mount options for Samba share
+
+  Commands are help, image [file_path], sshfs, ftpfs, samba, device, hist, udevmount, udevunmount, unmount, and tray
+
+  - If command is not given, main menu is shown with commands listed
+  - help: shows a list of commands and short descriptions
+  - image [file_path]: if image file path is not given, you'll be prompted to enter it
+  - sshfs: you'll be prompted to enter server name/ip, start directory (i.e. / or leave blank to use home directory defined by ssh server), port (leave blank to use default), and username (enter if different than current user).  It will ask for password if RSA key authentication is not used.
+  - ftpfs: you'll be prompted to enter server name/ip, port (leave blank to use default), username, and password (leave blank if you don't want password save in history)
+  - samba: you'll be ask to enter username and password (leave password blank if you don't want it save in history).  You can choose to browse for server on network or enter server name/ip manually, and then choose a share folder.
+  - device: you'll be able to mount media on the computer that is not currently mounted (i.e. mount cd/dvd, usb drive, unmounted partition, etc.)
+  - hist: mount previously mounted Samba/SSH/FTP shares
+  - unmount: unmount menu
+  - tray: show trayicon if there is mounted media
+  - udevmount/udevunmount: use in udev rules to automatically mount usb drive or sd card on insert.  Here is an example of the rule:
+    KERNEL!="sd[b-z][0-9]|mmcblk[0-9]p[0-9]", GOTO="mount_end"
+    ACTION=="add", PROGRAM!="/sbin/blkid %N", GOTO="mount_end"
+    ACTION=="add", RUN+="/usr/bin/mnttools udevmount"
+    ACTION=="remove", RUN+="/usr/bin/mnttools udevunmount"
+    LABEL="mount_end
+
+  If you want to allow users to mount/unmount without entering password, edit sudoers as follow:
+  - type: sudo visudo
+  - enter: %users  ALL=(ALL) ALL, NOPASSWD: /bin/umount, /bin/mount
+  - save the file.
+
+CHANGELOG
+
+COPYING
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
