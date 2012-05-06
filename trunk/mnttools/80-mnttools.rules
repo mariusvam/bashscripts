@@ -1,0 +1,5 @@
+KERNEL!="sd[b-z][0-9]|mmcblk[0-9]p[0-9]", GOTO="mount_end"
+ACTION=="add", PROGRAM!="/sbin/blkid %N", GOTO="mount_end"
+ACTION=="add", RUN+="/home/tri/bin/mnttools udevmount"
+ACTION=="remove", RUN+="/home/tri/bin/mnttools udevunmount"
+LABEL="mount_end"
