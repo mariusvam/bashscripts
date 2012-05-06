@@ -309,7 +309,7 @@ function _mount() { #need: DEVNAME mntpoint mntopts
   else
     rmdir "$mntpoint"; return 1
   fi
-  [[ $USER ]] && yadtray || runasuser $0 tray
+  [[ $USER ]] && nohup yadtray >/dev/null || runasuser $0 tray
   }
 
 function unmount {
@@ -325,7 +325,7 @@ function unmount {
   fi
   rmdir "$1"
   if [[ $run = yes ]]; then
-    [[ $USER ]] && yadtray || runasuser $0 tray
+    [[ $USER ]] && nohup yadtray >/dev/null || runasuser $0 tray
   fi
   }
 
