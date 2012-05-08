@@ -15,22 +15,21 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
+blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
   choices=("$@")
-  echo -e "$blue$bold"
-  echo "$menutitle"
+  echo -e "$blue$bold$menutitle"
   for i in "${choices[@]}"; do
-    echo "$((n++)))   $i"
+    echo -e "$none$((n++)))   $yellow$i"
   done
-  echo -n "c|q) Cancel"
-  echo -e $none
+  echo -en "${none}c|q) ${yellow}Cancel"
   echo -e $green
   read -p "Enter a choice from above menu: " i
-  if [[ $i = c ]] || [[ $i = q ]]; then
-    echo -e $none; exit 1
-  elif test $i -lt $n 2>/dev/null; then
-    echo -e $none; choice=${choices[i]}; return $i
+  echo -e $none
+  [[ $i =~ c|q ]] && exit 1
+  if test $i -lt $n 2>/dev/null; then
+    choice=${choices[i]}; return $i
   else
     echo -e "$red$i is an invalid entry...please try again!"
     menu "${choices[@]}"
@@ -172,7 +171,6 @@ function mainmenu {
   mainmenu
   }
 
-blue='\e[47;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 case $1 in
   -h|--h*) usage ;;
   --*) cmd=${1#--}; shift; files=("$@") ;;
