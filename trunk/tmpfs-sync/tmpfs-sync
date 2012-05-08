@@ -16,52 +16,13 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-function sync() {
-  for i in "${sync_folders[@]}"; do
-    backup=$i-backup
-    tmp=$tmpfs/${i//\//_}
-    if [[ `readlink "$i"` = "$tmp" ]]; then
-      [[ -d $i ]] && rsync -a --delete "$tmp/" "$backup/" ||  rsync "$tmp" "$backup"
-      [[ $? -eq 0 ]] && echo "$i synced"
-    else
-      echo -e "${red}Sync failed...$i is not in tmpfs $none"
-    fi
-  done
-  }
-
-function stopsync(){
-  sync
-  echo "Stoping tmpfs-sync ...."
-  for i in "${sync_folders[@]}"; do
-    backup=$i-backup
-    tmp=$tmpfs/${i//\//_}
-    if [[ `readlink "$i"` = "$tmp" ]]; then
-      rm -rf "$i"
-      [[ -e $backup ]] && mv "$backup" "$i"
-      [[ -e $tmp ]] && rm -rf "$tmp"
-      echo "$i stopped"
-    fi
-  done
-  }
-
-function startsync(){
-  echo "Starting tmpfs-sync ...."
-  for i in "${sync_folders[@]}"; do
-    backup=$i-backup
-    tmp=$tmpfs/${i//\//_}
-    [[ `readlink "$i"` = "$tmp" ]] && continue
-    [[ -h $i ]] && rm -f "$i"
-    [[ -e $backup ]] && mv "$backup" "$i"
-    cp -a "$i" "$tmp" && mv "$i" "$backup" && ln -s "$tmp" "$i" && echo "$i started"
-  done
-  }
+red='\e[0;31m'; bold='\e[1m'; none='\e[0m'
+log="logger -t tmpfs-sync -s"
 
 function usage {
   echo -e "${bold}Usage: $0 [--config config_file_path] readme|start|sync|stop $none"
   exit 1
   }
-
-red='\e[0;31m'; bold='\e[1m'; none='\e[0m'
 
 if [[ $1 = --config ]]; then
   config=$2
@@ -75,13 +36,50 @@ if ! source ${config:=$0.cfg}; then
   usage
 fi
 if ! mount | grep -q "$tmpfs type tmpfs"; then
-  echo -e "$red$tmpfs is not mounted as tmpfs $none"
-  exit 1
+  echo -e "$red$tmpfs is not mounted as tmpfs $none"; exit 1
 fi
 
-case "$1" in
-  start) startsync  ;;
-  stop) stopsync ;;
-  sync) sync ;;
-  *) usage ;;
-esac
+function sync() {
+  [[ `readlink "$1"` = $tmp ]] || return 2
+  [[ -d $tmp ]] && rsync -a --delete "$tmp/" "$backup/" ||  rsync "$tmp" "$backup"
+  if [[ $? -eq 0 ]]; then
+    $log "$1 synced"
+  else
+    $log "$1 fails to sync"; return 1
+  fi
+  }
+
+function stopsync(){
+  [[ `readlink "$1"` = $tmp ]] || return 2
+  rm -f "$1"
+  [[ -e $backup ]] && mv "$backup" "$1"
+  [[ -e $tmp ]] && rm -rf "$tmp"
+  }
+
+function startsync(){
+    [[ `readlink "$1"` = $tmp ]] && return 2
+    cp -a "$i" "$tmp" || return 1
+    mv "$i" "$backup" || return 1
+    ln -s "$tmp" "$i" || return 1
+  }
+
+action=$1
+for i in "${sync_folders[@]}"; do
+  backup=$i-backup
+  tmp=$tmpfs/${i//\//_}
+  case $action in
+    start)
+      startsync "$i"
+      if [[ $? -eq 1 ]]; then
+        $log "$i fails to start"; stopsync "$i"
+      else
+        $log "$i started"
+      fi ;;
+    stop)
+      sync "$i"
+      stopsync "$i"
+      $log "$i stopped" ;;
+    sync) sync "$i" ;;
+    *) usage ;;
+  esac
+done
