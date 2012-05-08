@@ -1,4 +1,4 @@
-README for tmpfs-sync v0.3
+README for tmpfs-sync v0.4
 
 AUTHOR
   Tri Le <trile7 at gmail dot com>
@@ -48,6 +48,9 @@ CHANGELOG
   v0.3
     - minor code improvements
     - sync file as well as directory
+  v0.4
+    - log message in /var/log/messages.log
+    - if sync fail, revert to original state
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
