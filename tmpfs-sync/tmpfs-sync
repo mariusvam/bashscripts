@@ -16,11 +16,11 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-red='\e[0;31m'; bold='\e[1m'; none='\e[0m'
 log="logger -t tmpfs-sync -s"
 
 function usage {
-  echo -e "${bold}Usage: $0 [--config config_file_path] readme|start|sync|stop $none"
+  echo "tmpfs-sync v0.4"
+  echo "Usage: $0 [--config config_file_path] readme|start|sync|stop"
   exit 1
   }
 
@@ -32,11 +32,11 @@ elif [[ $1 = readme ]]; then
   exit 0
 fi
 if ! source ${config:=$0.cfg}; then
-  echo -e "${red}Problem sourcing config file.  Please refer to readme to create config file $none"
+  echo "Problem sourcing config file.  Please refer to readme to create config file"
   usage
 fi
 if ! mount | grep -q "$tmpfs type tmpfs"; then
-  echo -e "$red$tmpfs is not mounted as tmpfs $none"; exit 1
+  echo "$tmpfs is not mounted as tmpfs"; exit 1
 fi
 
 function sync() {
