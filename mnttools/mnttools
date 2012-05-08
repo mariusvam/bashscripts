@@ -181,7 +181,7 @@ function smbbrowse {
   if [[ $user ]]; then
     read -p "password: " pass
     auth="-U $user%$pass"
-    mntopts="$mntopts,user=$user"
+    mntopts="$mntopts,uid=$user,user=$user"
     [[ $pass ]] && mntopts=$mntopts,password=$pass
   else
     auth="-N"
@@ -278,6 +278,7 @@ function unmountmenu {
     if [[ $choice = All ]]; then
       run=no
       for i in "${mntpoints[@]}"; do unmount "$i"; done
+      $0 tray
     else
       unmount "$choice"
     fi
@@ -309,7 +310,7 @@ function _mount() { #need: DEVNAME mntpoint mntopts
   else
     rmdir "$mntpoint"; return 1
   fi
-  [[ $USER ]] && nohup yadtray >/dev/null || runasuser $0 tray
+  [[ $USER ]] && $0 tray || runasuser $0 tray
   }
 
 function unmount {
@@ -325,7 +326,7 @@ function unmount {
   fi
   rmdir "$1"
   if [[ $run = yes ]]; then
-    [[ $USER ]] && nohup yadtray >/dev/null || runasuser $0 tray
+    [[ $USER ]] && $0 tray || runasuser $0 tray
   fi
   }
 
@@ -367,6 +368,7 @@ case $1 in
   hist) histmenu ;;
   unmount) unmountmenu ;;
   -h|*help)
+    echo "mnttools v0.2"
     echo "$0                      #show main menu"
     echo "$0 image file_paths     #mount image file (iso,img,etc.)"
     echo "$0 sshfs                #mount via sshfs"
