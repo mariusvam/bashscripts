@@ -17,9 +17,10 @@
 COMMENT
 
 log="logger -t tmpfs-sync -s"
+ver="tmpfs v0.4"
 
 function usage {
-  echo -e "tmpfs-sync v0.4\nUsage: $0 [--config config_file_path] readme|start|sync|stop"; exit 1
+  echo -e "$ver\nUsage: $0 [--config config_file_path] readme|start|sync|stop"; exit 1
   }
 
 if [[ $1 = --config ]]; then
@@ -45,23 +46,22 @@ function sync2disk() {
   }
 
 function stopsync(){
-  [[ `readlink "$1"` = $tmp ]] || return 2
-  rm -f "$1"
+  [[ -h $1 ]] && rm -f "$1"
   [[ -e $backup ]] && mv "$backup" "$1"
   [[ -e $tmp ]] && rm -rf "$tmp"
   }
 
 function startsync(){
-    [[ `readlink "$1"` = $tmp ]] && return 2
-    if ! cp -a "$1" "$tmp"; then
-      for j in {1..5}; do
-        sleep 6
-        cp -a "$1" "$tmp" && break
-      done
-      [[ $? -eq 0 ]] || return 1
-    fi
-    mv "$1" "$backup" || return 1
-    ln -s "$tmp" "$1" || return 1
+  [[ `readlink "$1"` = $tmp ]] && return 2
+  if ! cp -a "$1" "$tmp"; then
+    for j in {1..5}; do
+      sleep 6
+      cp -a "$1" "$tmp" && break
+    done
+    [[ $? -eq 0 ]] || return 1
+  fi
+  mv "$1" "$backup" || return 1
+  ln -s "$tmp" "$1" || return 1
   }
 
 action=$1
@@ -69,17 +69,8 @@ for i in "${sync_folders[@]}"; do
   backup=$i-backup
   tmp=$tmpfs/${i//\//_}
   case $action in
-    start)
-      startsync "$i"
-      if [[ $? -eq 1 ]]; then
-        $log "$i fails to start"; stopsync "$i"
-      else
-        $log "$i started"
-      fi ;;
-    stop)
-      sync2disk "$i"
-      stopsync "$i"
-      $log "$i stopped" ;;
+    start) if startsync "$i"; then $log "$i started"; else $log "$i fails to start"; stopsync "$i"; fi ;;
+    stop) sync2disk "$i"; stopsync "$i"; $log "$i stopped" ;;
     sync) sync2disk "$i" ;;
     *) usage ;;
   esac
