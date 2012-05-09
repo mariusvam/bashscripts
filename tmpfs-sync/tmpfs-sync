@@ -19,27 +19,22 @@ COMMENT
 log="logger -t tmpfs-sync -s"
 
 function usage {
-  echo "tmpfs-sync v0.4"
-  echo "Usage: $0 [--config config_file_path] readme|start|sync|stop"
-  exit 1
+  echo -e "tmpfs-sync v0.4\nUsage: $0 [--config config_file_path] readme|start|sync|stop"; exit 1
   }
 
 if [[ $1 = --config ]]; then
-  config=$2
-  shift 2
+  config=$2; shift 2
 elif [[ $1 = readme ]]; then
-  cat "$0.readme"
-  exit 0
+  cat "$0.readme"; exit 0
 fi
 if ! source ${config:=$0.cfg}; then
-  echo "Problem sourcing config file.  Please refer to readme to create config file"
-  usage
+  echo "Problem sourcing config file.  Please refer to readme to create config file"; usage
 fi
 if ! mount | grep -q "$tmpfs type tmpfs"; then
   echo "$tmpfs is not mounted as tmpfs"; exit 1
 fi
 
-function sync() {
+function sync2disk() {
   [[ `readlink "$1"` = $tmp ]] || return 2
   [[ -d $tmp ]] && rsync -a --delete "$tmp/" "$backup/" ||  rsync "$tmp" "$backup"
   if [[ $? -eq 0 ]]; then
@@ -58,9 +53,15 @@ function stopsync(){
 
 function startsync(){
     [[ `readlink "$1"` = $tmp ]] && return 2
-    cp -a "$i" "$tmp" || return 1
-    mv "$i" "$backup" || return 1
-    ln -s "$tmp" "$i" || return 1
+    if ! cp -a "$1" "$tmp"; then
+      for j in {1..5}; do
+        sleep 6
+        cp -a "$1" "$tmp" && break
+      done
+      [[ $? -eq 0 ]] || return 1
+    fi
+    mv "$1" "$backup" || return 1
+    ln -s "$tmp" "$1" || return 1
   }
 
 action=$1
@@ -76,10 +77,10 @@ for i in "${sync_folders[@]}"; do
         $log "$i started"
       fi ;;
     stop)
-      sync "$i"
+      sync2disk "$i"
       stopsync "$i"
       $log "$i stopped" ;;
-    sync) sync "$i" ;;
+    sync) sync2disk "$i" ;;
     *) usage ;;
   esac
 done
