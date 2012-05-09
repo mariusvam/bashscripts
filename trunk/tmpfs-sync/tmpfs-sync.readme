@@ -50,7 +50,8 @@ CHANGELOG
     - sync file as well as directory
   v0.4
     - log message in /var/log/messages.log
-    - if sync fail, revert to original state
+    - for startsync, if fail to copy to tmpfs, retry 5 more time.
+    - if startsync fail, revert to original state
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
