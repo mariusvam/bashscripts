@@ -1,0 +1,127 @@
+#!/bin/bash
+: <<COMMENT
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+COMMENT
+
+version="gmailchecker v0.1"
+oIFS=$IFS
+
+function createcfg(){
+  i=`yad --title "gmailchecker - $cfg" --window-icon "$ICON" --center --form --text "bold fields are required" --field "<b>username</b>" "$USER" --field "<b>password</b>":H "$PASS" --field "<b>check interval in sec</b>\n <small>restart is required</small>":NUM "$INTERVAL!1..43200" --field "<b>icon fullpath</b>" "$ICON" --field "open web link command" "$OPEN" --field "run when icon is clicked" "$RUN" --field "sound WAV fullpath" "$WAV" --field "play sound on new mail":CHK "$SOUND"` || exit
+  IFS='|'; i=($i)
+  echo "USER='${i[0]}'" > "$cfg"
+  echo "PASS='"`perl -e "print unpack 'H*','${i[1]}'"`"'" >> "$cfg"
+  echo "INTERVAL='${i[2]}'" >> "$cfg"
+  echo "ICON='${i[3]}'" >> "$cfg"
+  echo "OPEN='${i[4]}'" >> "$cfg"
+  echo "RUN='${i[5]}'" >> "$cfg"
+  echo "WAV='${i[6]}'" >> "$cfg"
+  echo "SOUND='${i[7]}'" >> "$cfg"
+  IFS=$oIFS
+  chmod 600 "$cfg"
+  readcfg
+  }
+
+function readcfg(){
+  source "$cfg"
+  PASS=`perl -e "print pack 'H*','$PASS'"`
+  [[ $1 = showcfg || -z $USER || -z $PASS || -z $ICON ]] && createcfg
+  }
+
+function checkmail(){
+  readcfg
+  [[ -f $mail ]] && mv "$mail" "$_mail"
+  wget -q --secure-protocol=TLSv1 --no-check-certificate --user=$USER --password=$PASS https://mail.google.com/mail/feed/atom -O - | grep title | sed "s/<title>//" | sed "s/<\/title>//" > "$mail"
+  if [[ -f $_mail ]]; then diff "$mail" "$_mail" && return; fi
+  mailcount=`wc -l "$mail" | cut -d' ' -f1`; ((mailcount--))
+  tip=
+  if [[ $mailcount -ge 0 ]]; then
+    if [[ $mailcount -gt 0 ]]; then
+      convert "$ICON" -gravity North -pointsize 16 -annotate 0 $mailcount "$img"
+      [[ $SOUND = "TRUE" && -f "$WAV" ]] && aplay "$WAV"
+    else
+      cp "$ICON" "$img"
+    fi
+    while read line; do
+      i=`echo ${line:0:50} | iconv -f ISO88592 -t UTF8 | tr -d '&'`
+      tip=$tip$i'\n '
+    done < "$mail"
+  else
+    convert "$ICON" -gravity Center -pointsize 24 -annotate 0 "X" "$img"
+    tip="cannot access gmail!"
+  fi
+  echo "tooltip:$tip" >&4
+  echo "action:$RUN" >&4
+  echo "icon:$img" >&4
+  [[ $OPEN ]] && opengmail="open gmail!$OPEN https://mail.google.com||"
+  echo "menu:${opengmail}check now!$0 -c '$cfg' -r|edit config!$0 -c '$cfg' -e|quit!$0 -c '$cfg' -q" >&4
+  }
+
+function on_exit(){
+  echo quit >&4
+  find "$tmpdir" -name "${cfg##*/}.*" -exec rm '{}' +
+  exit
+  }
+
+if [[ -z $DISPLAY ]]; then echo "Cannot detect display"; exit 1; fi
+if [[ $1 = -c ]]; then cfg=$2; shift 2; fi
+if [[ ! -f $cfg ]]; then
+  touch "${cfg:=$HOME/.gmailchecker}" || exit 1
+  ICON=/usr/share/gmailchecker/gmail.png
+  WAV=/usr/share/gmailchecker/ding.wav
+  INTERVAL=120
+  OPEN=xdg-open
+  SOUND=TRUE
+fi
+tmpdir=/tmp/gmailchecker
+mkdir -p "$tmpdir"
+pipe=$tmpdir/${cfg##*/}.pipe
+img=$tmpdir/${cfg##*/}.png
+mail=$tmpdir/${cfg##*/}.txt
+_mail=$tmpdir/${cfg##*/}.old
+pid=$tmpdir/${cfg##*/}.pid
+[[ -e $pipe ]] || mkfifo "$pipe"
+exec 4<>"$pipe"
+case $1 in
+  -e)
+    readcfg showcfg
+    exit ;;
+  -b)
+    nohup $0 &>/dev/null &
+    exit ;;
+  -r) [[ -f $pid ]] && checkmail || exit 1 ;;
+  -q) on_exit ;;
+  -h|--help)
+    echo "$version"
+    echo "Usage: $0 [-c cfg_filepath] [-b|-e|-q|-h]"
+    echo "  -c use specified configuration file.  Defalut is $HOME/.gmailchecker"
+    echo "  -b run in background.  Use this option instead of '&'"
+    echo "  -e edit configuration"
+    echo "  -q quit"
+    exit ;;
+esac
+[[ -e $pid ]] && exit
+trap on_exit EXIT
+while true; do
+  [[ -f $pid ]] && ps -e | grep -q `cat "$pid"`
+  if [[ $? -ne 0 ]]; then
+    yad --kill-parent --text gmailchecker --notification --listen <&4 &
+    echo $! > "$pid"
+    sleep 1
+  fi
+  checkmail
+  sleep ${INTERVAL:=300}
+done
