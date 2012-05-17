@@ -1,0 +1,58 @@
+README for gmailchecker v0.1
+
+AUTHOR
+  Tri Le <trile7 at gmail dot com>
+
+SOURCE
+  tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
+  scripts can be viewed at http://code.google.com/p/bashscripts/source/browse/trunk/gmailchecker
+  aur package http://aur.archlinux.org/packages.php?ID=59345
+
+DEPENDENCIES
+  Required: yad, imagemagick, wget, sed, coreutils, procps-ng
+  Optional: alsa-utils - play sound on new mail
+
+INSTALL
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from https://aur.archlinux.org/packages/mn/mnttools/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
+
+FEATURE
+  - check new (unread) gmail (up to 20) via rss feed
+  - display trayicon with mail subject tooltip via yad
+  - play sound on new mail
+  - check multiple gmail accounts
+
+DESCRIPTION
+  Usage: gmailchecker [-c cfg_filepath] [-b|-e|-q|-h]
+
+  Default configuration file is $HOME/.gmailchecker.  If you want to specify a configuration file, the -c option must goes first.  You can check multiple gmail accounts by running gmailchecker with different configuration files.
+
+  -b backgrounds gmailchecker.  Use this option instead of "&" to make sure it runs properly.
+
+  -e edits configuration file.
+
+  -q quits gmailchecker
+
+  -h displays help then exit
+
+  If there is no new unread mail, just gmail icon is displayed in tray
+
+  If there is new mail, gmail icon with total number of new mails (up to 20) is displayed in tray.  When you hover over the icon, tooltip of the first 50 characters from the subject line for each mail is shown.
+
+CHANGELOG
+
+COPYING
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
