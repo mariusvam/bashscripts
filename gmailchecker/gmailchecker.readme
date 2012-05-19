@@ -1,4 +1,4 @@
-README for gmailchecker v0.1
+README for gmailchecker v0.2
 
 AUTHOR
   Tri Le <trile7 at gmail dot com>
@@ -41,6 +41,11 @@ DESCRIPTION
   If there is new mail, gmail icon with total number of new mails (up to 20) is displayed in tray.  When you hover over the icon, tooltip of the first 50 characters from the subject line for each mail is shown.
 
 CHANGELOG
+  v0.1
+    - initial release
+  v0.2
+    - fix run in background with custom config file
+    - fix default values for new config file
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
