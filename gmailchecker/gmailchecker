@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="gmailchecker v0.1"
+version="gmailchecker v0.2"
 oIFS=$IFS
 
 function createcfg(){
@@ -36,8 +36,16 @@ function createcfg(){
   }
 
 function readcfg(){
-  source "$cfg"
-  PASS=`perl -e "print pack 'H*','$PASS'"`
+  if [[ -s $cfg ]]; then
+    source "$cfg"
+    PASS=`perl -e "print pack 'H*','$PASS'"`
+  else
+    ICON=/usr/share/gmailchecker/gmail.png
+    WAV=/usr/share/gmailchecker/ding.wav
+    INTERVAL=120
+    OPEN=xdg-open
+    SOUND=TRUE
+  fi
   [[ $1 = showcfg || -z $USER || -z $PASS || -z $ICON ]] && createcfg
   }
 
@@ -78,14 +86,7 @@ function on_exit(){
 
 if [[ -z $DISPLAY ]]; then echo "Cannot detect display"; exit 1; fi
 if [[ $1 = -c ]]; then cfg=$2; shift 2; fi
-if [[ ! -f $cfg ]]; then
-  touch "${cfg:=$HOME/.gmailchecker}" || exit 1
-  ICON=/usr/share/gmailchecker/gmail.png
-  WAV=/usr/share/gmailchecker/ding.wav
-  INTERVAL=120
-  OPEN=xdg-open
-  SOUND=TRUE
-fi
+touch "${cfg:=$HOME/.gmailchecker}" || exit 1
 tmpdir=/tmp/gmailchecker
 mkdir -p "$tmpdir"
 pipe=$tmpdir/${cfg##*/}.pipe
@@ -100,7 +101,7 @@ case $1 in
     readcfg showcfg
     exit ;;
   -b)
-    nohup $0 &>/dev/null &
+    nohup $0 -c "$cfg" &>/dev/null &
     exit ;;
   -r) [[ -f $pid ]] && checkmail || exit 1 ;;
   -q) on_exit ;;
