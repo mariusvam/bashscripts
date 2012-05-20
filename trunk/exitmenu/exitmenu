@@ -1,0 +1,65 @@
+#!/bin/bash
+
+version="exitmenu v0.1"
+y='yad --center --on-top --sticky --window-icon gtk-quit --title ExitMenu --image gtk-quit'
+oIFS=$IFS
+
+function closewindows {
+  if [[ $fc = TRUE ]]; then
+    IFS=$'\n'; wins=(`wmctrl -l | grep -v ExitMenu$ | grep $HOSTNAME`); IFS=$oIFS
+    for i in "${wins[@]}"; do
+      win=($i)
+      wmctrl -c ${win[@]:3}
+    done
+    return
+  fi
+  while true; do
+    win=(`wmctrl -l | grep -v ExitMenu$ | grep $HOSTNAME | head -n1`)
+    if [[ $win ]]; then
+      wmctrl -c ${win[@]:3}
+      echo "#Waiting to close: ${win[@]:3}"
+    else
+      echo 100; break
+    fi
+  done | $y --progress --pulsate --auto-close --button gtk-cancel:1 || exit 1
+  }
+
+function menu {
+  [[ -f $HOME/.exitmenu ]] && source "$HOME/.exitmenu"
+  i=`$y --form --field Action:CB 'poweroff!reboot!logoff!sleep!hibernate' --field "Force close":CHK FALSE --field Countdown 2s --field "<i>(use s, m, h or date/time string)</i>":LBL "" --field "su prog" ${suprog:=sudo}` || exit
+  action=`echo $i | cut -d'|' -f1`
+  fc=`echo $i | cut -d'|' -f2`
+  countdown=`echo $i | cut -d'|' -f3`
+  suprog=`echo $i | cut -d'|' -f5`
+  echo "suprog=${suprog:=sudo}" > "$HOME/.exitmenu"
+  if [[ $countdown ]]; then
+    t=`echo $countdown | grep -o [[:digit:]]`
+    unit=`echo $countdown | grep -o [[:alpha:]]`
+    case $unit in
+      s*) t=$t ;;
+      m*) t=$((t*60)) ;;
+      h*) t=$((t*360)) ;;
+      *) d0=`date +%s`; d1=`date -d "$countdown" +%s`; t=$((d1-d0)) ;;
+    esac
+    [[ $t -gt 0 ]] && $y --timeout $t --timeout-indicator bottom --text "$action in" --button gtk-cancel:1
+    [[ $? -eq 70 ]] || exit 1
+  fi
+  }
+
+if [[ $1 =~ -h|--help ]]; then
+  echo "$version"
+  echo "Usage: $0"
+  echo
+  echo "To execute exiting command without entering password, run 'visudo' as root and add the following:"
+  echo "$USER ALL=(ALL) ALL, NOPASSWD: /sbin/shutdown, /usr/sbin/pm-suspend, /usr/sbin/pm-hibernate"
+  exit
+fi
+menu
+[[ $action =~ sleep|hibernate ]] || closewindows
+case $action in
+  logoff) pkill xinit ;;
+  reboot) $suprog shutdown -r now ;;
+  poweroff) $suprog shutdown -h now ;;
+  sleep) $suprog pm-suspend ;;
+  hibernate) $suprog pm-hibernate ;;
+esac
