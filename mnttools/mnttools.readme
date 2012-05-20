@@ -1,4 +1,4 @@
-README for mnttools v0.3
+README for mnttools
 
 AUTHOR
   Tri Le <trile7 at gmail dot com>
@@ -29,9 +29,12 @@ FEATURE
   - Mount FTP
   - Mount devices on computer (i.e. optical disc, unmounted partition/drive, etc.)
   - Save network mounts in history for quick access
+  - Write device info to conky configuration file
 
 DESCRIPTION
   Usage: mnttools [--config config_file_path] [command]
+
+  Default config file is $HOME/.mnttools.  If it exists it will be read unless you specify an alternative file using --config option.
 
   Configuration file contains the following variables: mntroot, save_history, history_file, general_mntopts, sshfs_mntopts, ftpfs_mntopts, cifs_mntopts, and winfs_mntopts.  Default for these variables are:
 
@@ -80,6 +83,8 @@ CHANGELOG
   - run tray after unmount all to clear trayicon
   v0.3
   - write device info (total space, used space, free space, and disk io) to conky configuration file.
+  v0.3.1
+  - make default config file $HOME/.mnttools.
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
