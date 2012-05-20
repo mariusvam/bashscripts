@@ -1,4 +1,4 @@
-README for mnttools v0.1
+README for mnttools v0.3
 
 AUTHOR
   Tri Le <trile7 at gmail dot com>
@@ -43,6 +43,7 @@ DESCRIPTION
   - sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=100,umask=002 #mount options for ssh share
   - ftpfs_mntopts=gid=100,umask=002 #mount options for ftp share
   - cifs_mntopts=gid=100 #mount options for Samba share
+  - conkyrc=$HOME/.conkyrc #write mounting information to conkyrc file
 
   Commands are help, image [file_path], sshfs, ftpfs, samba, device, hist, udevmount, udevunmount, unmount, and tray
 
@@ -63,12 +64,22 @@ DESCRIPTION
     ACTION=="remove", RUN+="/usr/bin/mnttools udevunmount"
     LABEL="mount_end
 
+  If conkyrc file exists, device info (total space, used space, free space, and disk io) for block device will be written to the end of the file.  When the device is disconnect using this script, the entries in conkyrc file will be removed.
+
   If you want to allow users to mount/unmount without entering password, edit sudoers as follow:
   - type: sudo visudo
   - enter: %users  ALL=(ALL) ALL, NOPASSWD: /bin/umount, /bin/mount
   - save the file.
 
 CHANGELOG
+  v0.1.1
+  - run tray notification with nohup
+  v0.2
+  - remove nohup on tray notification
+  - add uid to samba mount options to allow write permission
+  - run tray after unmount all to clear trayicon
+  v0.3
+  - write device info (total space, used space, free space, and disk io) to conky configuration file.
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
