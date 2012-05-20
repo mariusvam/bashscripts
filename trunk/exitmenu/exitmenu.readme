@@ -1,0 +1,55 @@
+README for exitmenu v0.1
+
+AUTHOR
+  Tri Le <trile7 at gmail dot com>
+
+SOURCE
+  tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
+  scripts can be viewed at http://code.google.com/p/bashscripts/source/browse/trunk/exitmenu
+  aur package http://aur.archlinux.org/packages.php?ID=59384
+
+DEPENDENCIES
+  Required: yad, grep, coreutils, bash, sudo, sysvinit, wmctrl
+  Optional: pm-utils - to sleep or hibernate
+
+INSTALL
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from http://aur.archlinux.org/packages/ex/exitmenu/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
+
+FEATURE
+  - poweroff, reboot, logoff, sleep, or hibernate system
+  - gracefully close windows before poweroff, reboot, or logoff
+  - schedule exit action at a future time
+
+DESCRIPTION
+  To execute exiting command without entering password, run 'visudo' as root and add the following:
+
+  %users ALL=(ALL) ALL, NOPASSWD: /sbin/shutdown, /usr/sbin/pm-suspend, /usr/sbin/pm-hibernate
+
+  Alternatively, you can use other graphical su programs such as ktsuss, gksu, gksudo, gnomesu, xdg-su, kdesu, kdesudo, etc.
+
+  "sleep" and "hibernate" actions will not close windows.
+
+  If "force close" is checked, it will try to close windows gracefully but doesn't wait until the windows are closed before executing the exiting action.  So if there is unsaved data in one of the windows, it will be lost.
+
+  Countdown time can be entered as second (s), minute (m), hour (h), or time/date string (i.e. 12AM, tomorrow 5am, etc).  If remaining second is not shown during countdown, you must change show_remain=true in $HOME/.config/yad.conf file.
+
+CHANGELOG
+  v0.1
+    - initial release
+
+COPYING
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
