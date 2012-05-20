@@ -15,6 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
+version="mnttools v0.3"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -51,7 +52,7 @@ function yadtray() {
   fi
   pgrep -u ${USER:=$u} -f Mounted.*notification &>/dev/null || $y --text="Mounted Media" --image=gtk-harddisk --notification --command="$0 tray" --listen <&3 &
   pkill -f ${0##*/}.*mountpoints
-  mntpoint=`$y --center --title ${0##*/} --window-icon=gtk-harddisk --timeout=10 --height=200 --button gtk-open:0 --button gtk-remove:2 --list --column mountpoints ${mntpoints[@]}`
+  mntpoint=`$y --center --title ${0##*/} --window-icon=gtk-harddisk --timeout=10 --height=200 --button gtk-open:0 --button gtk-disconnect:2 --list --column mountpoints ${mntpoints[@]}`
   case $? in
     0) xdg-open "${mntpoint%|}" ;;
     2) unmount "${mntpoint%|}" | $y --on-top --center --no-buttons --skip-taskbar --undecorated --fixed --progress --pulsate --auto-close --progress-text "Unmounting ${mntpoint%|}...please wait..."
@@ -80,6 +81,7 @@ function udevunmount() {
 function devicemenu {
   mntopts="-o $general_mntopts"
   IFS=$'\n'
+  [[ `blkid` = "" ]] && sudo blkid
   d=(`blkid -o list | grep "not mounted"`)
   if [[ $d ]]; then
     menutitle="---Device Menu---"
@@ -105,7 +107,7 @@ function imagemenu {
   if [[ $# -eq 0 ]]; then
     echo -ne $green
     read -p "Enter image path: " image
-    if [[ ! -f $DEVNAME ]]; then
+    if [[ ! -f $image ]]; then
       echo -e "${red}Cannot locate $image $none"
       mainmenu
       return
@@ -306,6 +308,7 @@ function _mount() { #need: DEVNAME mntpoint mntopts
   esac
   if [[ $? -eq 0 ]]; then
     histsave
+    modconkyrc add
     echo "$DEVNAME is mounted at $mntpoint"
   else
     rmdir "$mntpoint"; return 1
@@ -314,19 +317,29 @@ function _mount() { #need: DEVNAME mntpoint mntopts
   }
 
 function unmount {
-  [[ $1 ]] || return 1
-  echo -e "${yellow}Unmounting $1 .... $none"
-  if mount | grep -q "$1"; then
-    fusermount -qu "$1" || $runasroot umount "$1"
+  [[ $1 ]] && mntpoint=$1 || return 1
+  echo -e "${yellow}Unmounting $mntpoint .... $none"
+  if mount | grep -q "$mntpoint"; then
+    fusermount -qu "$mntpoint" || $runasroot umount "$mntpoint"
     if [[ $? -ne 0 ]]; then
       echo
-      lsof "$1" 2>/dev/null
+      lsof "$mntpoint" 2>/dev/null
       return 1
     fi
   fi
-  rmdir "$1"
+  rmdir "$mntpoint"
+  modconkyrc remove
   if [[ $run = yes ]]; then
     [[ $USER ]] && $0 tray || runasuser $0 tray
+  fi
+  }
+
+function modconkyrc {
+  [[ -f $conkyrc ]] || return
+  if [[ $1 = add && $DEVNAME = /dev/* ]]; then
+    echo -e "\${color slate grey}${mntpoint##*/}:\${fs_size $mntpoint} \${color orange}U:\${fs_used $mntpoint} \${color}F:\${fs_free $mntpoint}\n\$color\${fs_bar $mntpoint} \${color orange}\${diskio ${DEVNAME##*/}}" >>"$conkyrc"
+  elif [[ $1 = remove ]]; then
+    sed -i "/${mntpoint##*\/}/d" "$conkyrc"
   fi
   }
 
@@ -356,6 +369,7 @@ winfs_mntopts=${winfs_mntopts:=gid=$gid,umask=002}
 sshfs_mntopts=${sshfs_mntopts:=reconnect,compression=yes,workaround=rename,gid=$gid,umask=002}
 ftpfs_mntopts=${ftpfs_mntopts:=gid=$gid,umask=002}
 cifs_mntopts=${cifs_mntopts:=gid=$gid}
+conkyrc=${conkyrc:=$HOME/.conkyrc}
 case $1 in
   udevmount) udevmount ;;
   udevunmount) udevunmount ;;
@@ -368,9 +382,9 @@ case $1 in
   hist) histmenu ;;
   unmount) unmountmenu ;;
   -h|*help)
-    echo "mnttools v0.2"
+    echo $version
     echo "$0                      #show main menu"
-    echo "$0 image file_paths     #mount image file (iso,img,etc.)"
+    echo "$0 image [file_paths]   #mount image file (iso,img,etc.)"
     echo "$0 sshfs                #mount via sshfs"
     echo "$0 ftpfs                #mount via curlftpfs"
     echo "$0 samba                #mount  via samba"
