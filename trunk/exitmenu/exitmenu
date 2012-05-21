@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="exitmenu v0.1"
+version="exitmenu v0.2"
 y='yad --center --on-top --sticky --window-icon gtk-quit --title ExitMenu --image gtk-quit'
 oIFS=$IFS
 
@@ -57,7 +57,9 @@ fi
 menu
 [[ $action =~ sleep|hibernate ]] || closewindows
 case $action in
-  logoff) pkill xinit ;;
+  logoff) wm=(`wmctrl -m | grep Name:`)
+    wmpid=(`ps -e | grep -i "${wm[1]}"`)
+    [[ $wmpid ]] && kill $wmpid || pkill xinit ;;
   reboot) $suprog shutdown -r now ;;
   poweroff) $suprog shutdown -h now ;;
   sleep) $suprog pm-suspend ;;
