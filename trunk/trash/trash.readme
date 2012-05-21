@@ -36,14 +36,16 @@ DESCRIPTION
   Usage: trash [--config cfg] --empty
   Remove all files in $trashcan/files and $trashcan/info
 
-  Usage: trash [--config cfg] --list
-  List files in trashcan and their information (orignal location and deletion date)
+  Usage: trash [--config cfg] --info files
+  Display information (orignal location and deletion date) for files in trashcan
 
   When trashing or restoring file, if file exists in destination location, "_n" will be added to the end of the filename where n is number from 0 to 99.
 
 CHANGELOG
   v0.1
   - initial release
+  v0.2
+  - change list option to info
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
