@@ -46,7 +46,7 @@ DESCRIPTION
   - sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=100,umask=002 #mount options for ssh share
   - ftpfs_mntopts=gid=100,umask=002 #mount options for ftp share
   - cifs_mntopts=gid=100 #mount options for Samba share
-  - conkyrc=$HOME/.conkyrc #write mounting information to conkyrc file
+  - conkyrc=/home/*/.conkyrc #write mounting information to conkyrc files.  Define them as an array.
 
   Commands are help, image [file_path], sshfs, ftpfs, samba, device, hist, udevmount, udevunmount, unmount, and tray
 
@@ -85,6 +85,9 @@ CHANGELOG
   - write device info (total space, used space, free space, and disk io) to conky configuration file.
   v0.3.1
   - make default config file $HOME/.mnttools.
+  v0.3.2
+  - update error message if unmount fail
+  - find default conkyrc file for udev
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
