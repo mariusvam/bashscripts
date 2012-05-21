@@ -1,0 +1,61 @@
+README for trash
+
+AUTHOR
+  Tri Le <trile7 at gmail dot com>
+
+SOURCE
+  tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
+  scripts can be viewed at http://code.google.com/p/bashscripts/source/browse/trunk/trash
+  aur package http://aur.archlinux.org/packages.php?ID=59403
+
+DEPENDENCIES
+  Required: coreutils, bash
+
+INSTALL
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from http://aur.archlinux.org/packages/tr/trash/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
+
+FEATURE
+  - Move items to "trashcan"
+  - Restore items from "trashcan"
+  - Limit item size to move to "trashcan"
+  - Empty "trashcan"
+
+DESCRIPTION
+  Default config file is $HOME/.trashrc.  If it exists it will be read unless you specify an alternative file using --config option.
+
+  Configuration file contains the following variables: trashcan and maxsize.  By default trashcan=$HOME/.local/share/Trash and maxsize=1000000000 (1GB).  "trashcan" define the location to move files to.  "maxsize" defines the maximum file size to move to trashcan.
+
+  Usage: trash [--config cfg] files
+  Move files to $trashcan/files and create info files in $trashcan/info.  Info file contains original path and deletion date of the file in $trashcan/files.  The script uses this information to restore file
+
+  Usage: trash [--config cfg] --restore files
+  Restore files to their original location
+
+  Usage: trash [--config cfg] --empty
+  Remove all files in $trashcan/files and $trashcan/info
+
+  Usage: trash [--config cfg] --list
+  List files in trashcan and their information (orignal location and deletion date)
+
+  When trashing or restoring file, if file exists in destination location, "_n" will be added to the end of the filename where n is number from 0 to 99.
+
+CHANGELOG
+  v0.1
+  - initial release
+
+COPYING
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
