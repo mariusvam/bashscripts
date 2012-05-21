@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.3.1"
+version="mnttools v0.3.2"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -322,11 +322,12 @@ function unmount {
   if mount | grep -q "$mntpoint"; then
     fusermount -qu "$mntpoint" || $runasroot umount "$mntpoint"
     if [[ $? -ne 0 ]]; then
-      echo
+      echo "#fail to unmount $mntpoint"
       lsof "$mntpoint" 2>/dev/null
       return 1
     fi
   fi
+  echo 100
   rmdir "$mntpoint"
   modconkyrc remove
   if [[ $run = yes ]]; then
@@ -335,12 +336,14 @@ function unmount {
   }
 
 function modconkyrc {
-  [[ -f $conkyrc ]] || return
-  if [[ $1 = add && $DEVNAME = /dev/* ]]; then
-    echo -e "\${color slate grey}${mntpoint##*/}:\${fs_size $mntpoint} \${color orange}U:\${fs_used $mntpoint} \${color}F:\${fs_free $mntpoint}\n\$color\${fs_bar $mntpoint} \${color orange}\${diskio ${DEVNAME##*/}}" >>"$conkyrc"
-  elif [[ $1 = remove ]]; then
-    sed -i "/${mntpoint##*\/}/d" "$conkyrc"
-  fi
+  for i in "${conkyrc[@]}"; do
+    [[ -f $i ]] || continue
+    if [[ $1 = add && $DEVNAME = /dev/* ]]; then
+      echo -e "\${color slate grey}${mntpoint##*/}:\${fs_size $mntpoint} \${color orange}U:\${fs_used $mntpoint} \${color}F:\${fs_free $mntpoint}\n\$color\${fs_bar $mntpoint} \${color orange}\${diskio ${DEVNAME##*/}}" >>"$i"
+    elif [[ $1 = remove ]]; then
+      sed -i "/${mntpoint##*\/}/d" "$i"
+    fi
+  done
   }
 
 function runasuser {
@@ -369,7 +372,9 @@ winfs_mntopts=${winfs_mntopts:=gid=$gid,umask=002}
 sshfs_mntopts=${sshfs_mntopts:=reconnect,compression=yes,workaround=rename,gid=$gid,umask=002}
 ftpfs_mntopts=${ftpfs_mntopts:=gid=$gid,umask=002}
 cifs_mntopts=${cifs_mntopts:=gid=$gid}
-conkyrc=${conkyrc:=$HOME/.conkyrc}
+if [[ -z $conkyrc ]]; then
+  for i in /home/*/.conkyrc; do conkyrc=("$conkyrc" "$i"); done
+fi
 case $1 in
   udevmount) udevmount ;;
   udevunmount) udevunmount ;;
