@@ -16,13 +16,13 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.1"
+version="trash v0.2"
 
-function list {
-  for i in $trashcan/info/*.trashinfo; do
-    if [[ ! -f $i ]]; then echo "trashcan is emptied."; exit; fi
-    echo "$trashcan/files/"`basename "$i" .trashinfo`
-    tail -n2 "$i"
+function info {
+  for i; do
+    trashinfo=$trashcan/info/${i##*/}.trashinfo
+    [[ -f $trashinfo ]] || continue
+    cat "$trashinfo"
     echo "---------"
   done
   }
@@ -73,7 +73,7 @@ function move {
       fi
     done
     [[ -e $trashcan/files/$filename ]] && continue
-    mv -n "$i" "$trashcan/files/$filename" && echo -e "[Trash Info]\nPath=$i\nDeletionDate=`date`" > "$trashcan/info/$filename.trashinfo"
+    mv "$i" "$trashcan/files/$filename" && echo -e "[$filename trash info]\nPath=$i\nDeletionDate=`date`" > "$trashcan/info/$filename.trashinfo"
   done
   }
 
@@ -82,9 +82,9 @@ function usage {
   echo "$0 [--config cfg] files            #move file to trashcan"
   echo "$0 [--config cfg] --restore files  #restore item to its orginal location"
   echo "$0 [--config cfg] --empty          #remove all items in trashcan"
-  echo "$0 [--config cfg] --list           #list content of trashcan"
+  echo "$0 [--config cfg] --info files     #show trash file info"
   echo
-  echo "trashcan is $trashcan and max file size to move to trash is $maxsize"
+  echo "trashcan is $trashcan/files and max file size to trash is $maxsize"
   }
 
 if [[ $1 = --config ]]; then
@@ -99,7 +99,7 @@ if ! mkdir -p "$trashcan"; then
 fi
 case $1 in
   --help|-h) usage ;;
-  --list) list ;;
+  --info) shift; cd "$trashcan/files"; info "$@" ;;
   --empty) rm -rf "$trashcan"/files/*; rm -rf "$trashcan"/info/* ;;
   --restore) shift; restore "$@" ;;
   *) move "$@" ;;
