@@ -1,4 +1,4 @@
-README for exitmenu v0.1
+README for exitmenu
 
 AUTHOR
   Tri Le <trile7 at gmail dot com>
@@ -37,7 +37,10 @@ DESCRIPTION
 
 CHANGELOG
   v0.1
-    - initial release
+  - initial release
+  v0.2
+  - for logoff, try to kill window manager pid before resource to xinit
+  - add date/time picker
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
