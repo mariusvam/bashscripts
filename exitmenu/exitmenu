@@ -24,13 +24,19 @@ function closewindows {
   done | $y --progress --pulsate --auto-close --button gtk-cancel:1 || exit 1
   }
 
+function datetime {
+  D=`date +%D`; H=`date +%H`; M=`date +%M`
+  j=`yad --center --on-top --sticky --window-icon gtk-quit --title ExitMenu --form --columns 3 --field Date:DT "$D" --field HH:NUM $H'!0..23' --field MM:NUM $M'!0..59'` || return $?
+  IFS=$'|'; i=($j); IFS=$oIFS;
+  echo "3:${i[0]} ${i[1]%.*}:${i[2]%.*}"
+  }
+export -f datetime
+
 function menu {
   [[ -f $HOME/.exitmenu ]] && source "$HOME/.exitmenu"
-  i=`$y --form --field Action:CB 'poweroff!reboot!logoff!sleep!hibernate' --field "Force close":CHK FALSE --field Countdown 2s --field "<i>(use s, m, h or date/time string)</i>":LBL "" --field "su prog" ${suprog:=sudo}` || exit
-  action=`echo $i | cut -d'|' -f1`
-  fc=`echo $i | cut -d'|' -f2`
-  countdown=`echo $i | cut -d'|' -f3`
-  suprog=`echo $i | cut -d'|' -f5`
+  j=`$y --form --field Action:CB 'poweroff!reboot!logoff!sleep!hibernate' --field "Force close":CHK FALSE --field Countdown 2s --field "Use s, m, h or date/time string":BTN "@bash -c datetime" --field "su prog" ${suprog:=sudo}` || exit
+  IFS=$'|'; i=($j); IFS=$oIFS
+  action=${i[0]}; fc=${i[1]}; countdown=${i[2]}; suprog=${i[4]}
   echo "suprog=${suprog:=sudo}" > "$HOME/.exitmenu"
   if [[ $countdown ]]; then
     t=`echo $countdown | grep -o [[:digit:]]`
