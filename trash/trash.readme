@@ -46,6 +46,9 @@ CHANGELOG
   - initial release
   v0.2
   - change list option to info
+  v0.2.1
+  - fixes create trash directories if they don't exist
+  - add message that user must be in trash directory in order to query trashed file info.
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
