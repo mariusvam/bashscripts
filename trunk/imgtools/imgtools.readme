@@ -1,0 +1,76 @@
+README for imgtools
+
+AUTHOR
+  Tri Le <trile7 at gmail dot com>
+
+SOURCE
+  tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
+  scripts can be viewed at http://code.google.com/p/bashscripts/source/browse/trunk/imgtools
+  aur package http://aur.archlinux.org/packages.php?ID=59527
+
+DEPENDENCIES
+  depends=(imagemagick coreutils bash)
+  optdepends=("xorg-xrandr|xorg-xdpyinfo: determine monitor size for wallpaper")
+
+INSTALL
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from https://aur.archlinux.org/packages/im/imgtools/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
+
+FEATURE
+  - images slideshow
+  - images info
+  - set wallpaper
+  - images resize
+  - images format convert
+  - images rotate
+  - combine images to a pdf
+
+DESCRIPTION
+  Usage: imgtools [command] [option] images
+
+  Commands and options:
+
+  --slideshow  [--delay sec --loop n --resize pixel]
+  This command displays images as slideshow.  Options for this command are --delay: number of second to display an image before move to the next one, --loop: number of time to loop through the images (0=infinite), --resize: resize images to specific dimension.  If any of these options is not specified, defaults (--delay 2 --loop 0 --resize 800x600>) will be used (delay 2 seconds, loop forever, and resize only large images to 800x600 keeping aspect ratio)
+
+  --info
+  This command displays images name, format, dimension, geometry, depth, class, size, and processing times.
+
+  --wallpaper [--tile|--resizetile|--center|--resizecenter|--stretch]
+  This command sets an image as wallpaper (desktop background).  xrandr or xdpyinfo command is needed to find screen resolution of the current display so that wallpaper can be properly set for --resizetile, --center, --resizecenter, or --stretch option.  If the commands do not exist, it will use default resolution of 800x600.
+
+  --resize [--size pixel]
+  This command resizes images.  You can use resize operators (> < !) to determine what image size to resize.  Examples:
+    800x600> reduce only larger image to given size keeping aspect ratio
+    800x600< enlarge only smaller image to given size keeping aspect ratio
+    800x600! force image to given size ignoring aspect ratio
+  Resized images will have new image size appended to the end of their names.
+
+  --rotate [--angle degree]
+  This command rotates images.  Rotated images will have the rotation degree appended to the end of their names.
+
+  --format [--jpg|--png|--gif|--ico|--bmp|--tif|--ps|--pdf]
+  This command convert images to a specific format.
+
+  --2pdf [--name filename]
+  This command combines images into a pdf file.
+
+CHANGELOG
+  v0.1
+    - initial release
+
+COPYING
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
