@@ -10,7 +10,7 @@ SOURCE
 
 DEPENDENCIES
   depends=(imagemagick coreutils bash)
-  optdepends=("xorg-xrandr|xorg-xdpyinfo: determine monitor size for wallpaper")
+  optdepends=("xorg-xrandr|xorg-xdpyinfo|xorg-xprop: determine monitor size for wallpaper")
 
 INSTALL
   This installation procedure is for Arch's system.
@@ -58,7 +58,9 @@ DESCRIPTION
 
 CHANGELOG
   v0.1
-    - initial release
+  - initial release
+  v0.1.1
+  - xprop to find screen resolution
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
