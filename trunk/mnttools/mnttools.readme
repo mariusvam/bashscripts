@@ -88,6 +88,8 @@ CHANGELOG
   v0.3.2
   - update error message if unmount fail
   - find default conkyrc file for udev
+  v0.3.3
+  - add variable for open command
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
