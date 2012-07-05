@@ -15,6 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
+version="findtools v0.2"
 oIFS=$IFS
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
@@ -125,7 +126,7 @@ function change {
   echo -e $none
   for i in "${files[@]}"; do
     if [[ $cmd = infile ]]; then
-      sed -i "s/$fstring/$rstring/g" "$i"
+      sed -i "s/$xstring/$rstring/g" "$i"
     else
       newname=${i/$fstring/$rstring}
       mv -vn "$i" "$newname"
@@ -141,11 +142,11 @@ function deleteline {
 
 function infile {
   unset files
-  echo "Find string is case insensitive and can contain regular expressions."
+  echo "Find string is case insensitive and can contain basic regex."
   echo -ne $green
-  read -p "Enter find string: " fstring
+  read -p "Enter find string: " xstring
   echo -e $none
-  if [[ -z $fstring ]]; then
+  if [[ -z $xstring ]]; then
     echo -e "${red}String cannot be emptied. $none"
     infile
   fi
@@ -154,7 +155,7 @@ function infile {
   read -p "File pattern: " fpattern
   echo -e $none
   tmp=/tmp/foundfiles
-  grep -nHIir "$fstring" *"$fpattern"* > $tmp
+  grep -nHIir "$xstring" *"$fpattern"* > $tmp
   while read line; do
     files=( "${files[@]}" "${line%%:*}" )
     echo $line | grep --color=auto -i "$fstring"
@@ -172,14 +173,12 @@ function byname {
   echo -ne $none
   if [[ $fstring ]]; then
     IFS=$'\n'
-    files=(`find . -iname "$fstring"`)
+    files=(`find . -iname "*${fstring}*"`)
     IFS=$oIFS
-    fstring=${fstring#\*}
-    fstring=${fstring%\*}
-    fstring=${fstring//\*/.\*}
-    fstring=${fstring//\?/.}
-    for i in "${files[@]}"; do echo "$i" | grep --color=always -i "$fstring"; done
-    echo
+    xstring=${fstring//\*/.\*}
+    xstring=${xstring//\?/.}
+    xstring=${xstring//./\\.}
+    for i in "${files[@]}"; do echo "$i" | grep --color=always -i "$xstring"; done
     echo -e "${bold}Found ${#files[@]} files $none"
     [[ $files ]] && actionmenu || byname
   else
@@ -238,6 +237,7 @@ function empty {
   }
 
 function usage {
+  echo "$version"
   echo -e "${bold}Usage: ${0##*/} [option] $none"
   echo "Options: menu is shown if option is not specified"
   echo "  --byname  find file by string pattern"
