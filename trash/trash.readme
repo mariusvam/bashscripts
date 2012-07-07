@@ -21,6 +21,7 @@ FEATURE
   - Restore items from "trashcan"
   - Limit item size to move to "trashcan"
   - Empty "trashcan"
+  - Support multiple partition/drive
 
 DESCRIPTION
   Default config file is $HOME/.trashrc.  If it exists it will be read unless you specify an alternative file using --config option.
@@ -59,6 +60,9 @@ CHANGELOG
   - add message that user must be in trash directory in order to query trashed file info.
   v0.3
   - add support for multiple partitions/drives
+  v0.3.1
+  - fixes remove file from trash
+  - fixes remove file already in trashcan
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
