@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3"
+version="trash v0.3.1"
 
 function info {
   for i; do
@@ -58,7 +58,7 @@ function movetotrash {
       echo "$i doesn't exist"
       continue
     fi
-    if echo $i | grep -q /.Trash/; then
+    if echo $i | grep -q /*Trash.*/; then
       echo "cannot trash $i because it's already in the trashcan"
       continue
     fi
@@ -90,13 +90,14 @@ function movetotrash {
 
 function delete {
   for i; do
-    infofile=${i/\/files\//\/info\/}.trashinfo
-    rm -f "$i" "$infofile"
     if [[ -h $i ]]; then
-      i=`readlink "$i"`
-      infofile=${i/\/files\//\/info\/}.trashinfo
-      rm -f "$i" "$infofile"
+      i2=`readlink "$i"`
+    else
+      i2=$trashcan/files/`basename "$i"`
     fi
+    infofile=${i/\/files\//\/info\/}.trashinfo
+    info2=${i2/\/files\//\/info\/}.trashinfo
+    rm -f "$i" "$info" "$i2" "$info2"
   done
   }
 
