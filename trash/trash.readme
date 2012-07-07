@@ -25,7 +25,9 @@ FEATURE
 DESCRIPTION
   Default config file is $HOME/.trashrc.  If it exists it will be read unless you specify an alternative file using --config option.
 
-  Configuration file contains the following variables: trashcan and maxsize.  By default trashcan=$HOME/.local/share/Trash and maxsize=1000000000 (1GB).  "trashcan" define the location to move files to.  "maxsize" defines the maximum file size to move to trashcan.
+  Configuration file contains the following variables: trashcan and maxsize.  By default trashcan=$HOME/.local/share/Trash and maxsize=1000000000 (1GB).  "trashcan" define the location to store file when it's trashed.  "maxsize" defines the maximum file size to move to trashcan.
+
+  If the item to be trashed is on a different mountpoint than the trashcan (different partition/drive), the script will create trash directories where this filesystem is mounted and store trashed file there.  It aslo create links to the main trashcan so that all trashed items can be viewed in one place.  For example, trashcan=/home/user/.local/share/Trash/files which is mounted at /home.  You trash a file /media/usbdrive/somefile which is mounted at /media/usbdrive.  The script will create /media/usbdrive/.Trash-user/{files,info} directories and somefile will be moved into this directory.  It also creates a link in the main trashcan to somefile so that somefile can also be seen here.
 
   Usage: trash [--config cfg] files
   Move files to $trashcan/files and create info files in $trashcan/info.  Info file contains original path and deletion date of the file in $trashcan/files.  The script uses this information to restore file
@@ -34,10 +36,16 @@ DESCRIPTION
   Restore files to their original location
 
   Usage: trash [--config cfg] --empty
-  Remove all files in $trashcan/files and $trashcan/info
+  Remove all files and their infos from all trashcans
 
   Usage: trash [--config cfg] --info files
   Display information (orignal location and deletion date) for files in trashcan
+
+  Usage: trash [--config cfg] --delete files
+  Remove selected file and its info from trashcans
+
+  Usage: trash [--config cfg] --list
+  List files in main trashcan
 
   When trashing or restoring file, if file exists in destination location, "_n" will be added to the end of the filename where n is number from 0 to 99.
 
@@ -49,6 +57,8 @@ CHANGELOG
   v0.2.1
   - fixes create trash directories if they don't exist
   - add message that user must be in trash directory in order to query trashed file info.
+  v0.3
+  - add support for multiple partitions/drives
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
