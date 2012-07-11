@@ -41,7 +41,7 @@ DESCRIPTION
   - mntroot=/media #directory for mounting media.  You must have read/write/execute to this directory (i.e. "sudo chmod 777 /media")
   - save_history=true #whether or not to save mount parameters for Samba, SSH, and FTP mounts
   - history_file=$HOME/.mnttools_history #location of history file
-  - general_mntopts=noatime #mount options for all mount types
+  - general_mntopts=noatime #mount options for hard drive or flash drive
   - winfs_mntopts=gid=100,umask=002 #mount options for vfat and ntfs filesystems
   - sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=100,umask=002 #mount options for ssh share
   - ftpfs_mntopts=gid=100,umask=002 #mount options for ftp share
@@ -90,6 +90,11 @@ CHANGELOG
   - find default conkyrc file for udev
   v0.3.3
   - add variable for open command
+  v0.3.4
+  - remove general_mntopts from network mounts (ftpfs, cifs, sshfs)
+  - echo mount command
+  - add editcfg
+  - fix mountpoints
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
