@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.3.3"
+version="mnttools v0.3.4"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -43,9 +43,9 @@ function yadtray() {
   pipe="/tmp/${0##*/}.pipe"
   [[ -e $pipe ]] || (mkfifo $pipe && chmod 666 $pipe)
   exec 3<> $pipe
-  IFS=$'\n'
-  mntpoints=(`find "$mntroot" -mindepth 1 -maxdepth 1 -type d`)
-  IFS=$oIFS
+  for i in "$mntroot"/*; do
+    mount | grep -q "$i" && mntpoints=(${mntpoint[@]} "$i")
+  done
   if [[ ! $mntpoints ]]; then
     echo quit >&3
     return
@@ -122,7 +122,7 @@ function imagemenu {
   }
 
 function sshmenu() {
-  mntopts="-o $general_mntopts,$sshfs_mntopts"
+  mntopts="-o $sshfs_mntopts"
   echo -e "Enter ${green}main menu$none any time (except password field) to return to menu"
   echo -e $green
   read -p "Enter server name/ip: " server
@@ -143,7 +143,7 @@ function sshmenu() {
   }
 
 function ftpmenu() {
-  mntopts="-o $general_mntopts,$ftpfs_mntopts"
+  mntopts="-o $ftpfs_mntopts"
   echo -e "Enter ${green}main menu$none any time (except password field) to return to menu"
   echo -e $green
   read -p "Enter server name/ip: " server
@@ -177,7 +177,7 @@ function smbmenu {
   }
 
 function smbbrowse {
-  mntopts="-o $general_mntopts,$cifs_mntopts"
+  mntopts="-o $cifs_mntopts"
   echo -ne $green
   read -p "username: " user
   if [[ $user ]]; then
@@ -271,9 +271,9 @@ function mainmenu {
   }
 
 function unmountmenu {
-  IFS=$'\n'
-  mntpoints=(`find "$mntroot" -mindepth 1 -maxdepth 1 -type d`)
-  IFS=$oIFS
+  for i in "$mntroot"/*; do
+    mount | grep -q "$i" && mntpoints=(${mntpoint[@]} "$i")
+  done
   if [[ $mntpoints ]]; then
     menutitle="---Unmount---"
     menu ${mntpoints[@]} "All"
@@ -291,7 +291,7 @@ function unmountmenu {
   mainmenu
   }
 
-function _mount() { #need: DEVNAME mntpoint mntopts
+function _mount() { #require: DEVNAME mntpoint mntopts
   [[ $DEVNAME && $mntpoint ]] || return 1
   if i=`mount | grep -q "$DEVNAME"`; then
     echo -e "${red}$DEVNAME is already mounted $none"
@@ -300,11 +300,11 @@ function _mount() { #need: DEVNAME mntpoint mntopts
   fi
   n=1
   while [[ "$(ls -A $mntpoint/ 2>/dev/null)" ]]; do mntpoint=$mntpoint-$((n++)); done
-  mkdir -p "$mntpoint"
+  mkdir -p "$mntpoint" || return 1
   case $fs in
-    -t*sshfs) sshfs "$DEVNAME" "$mntpoint" $mntopts ;;
-    -t*ftpfs) curlftpfs "$DEVNAME" "$mntpoint" $mntopts ;;
-    *) $runasroot mount $fs $mntopts "$DEVNAME" "$mntpoint" ;;
+    -t*sshfs) sshfs "$DEVNAME" "$mntpoint" $mntopts; echo "mount command: sshfs $DEVNAME $mntpoint $mntopts" ;;
+    -t*ftpfs) curlftpfs "$DEVNAME" "$mntpoint" $mntopts; echo "mount command: curlftpfs $DEVNAME $mntpoint $mntopts" ;;
+    *) $runasroot mount $fs $mntopts "$DEVNAME" "$mntpoint"; echo "mount command: $runasroot mount $fs $mntopts $DEVNAME $mntpoint" ;;
   esac
   if [[ $? -eq 0 ]]; then
     histsave
@@ -313,7 +313,7 @@ function _mount() { #need: DEVNAME mntpoint mntopts
   else
     rmdir "$mntpoint"; return 1
   fi
-  [[ $USER ]] && $0 tray || runasuser $0 tray
+  [[ $USER && $USER != root ]] && $0 tray || runasuser $0 tray
   }
 
 function unmount {
@@ -331,7 +331,7 @@ function unmount {
   rmdir "$mntpoint"
   modconkyrc remove
   if [[ $run = yes ]]; then
-    [[ $USER ]] && $0 tray || runasuser $0 tray
+    [[ $USER && $USER != root ]] && $0 tray || runasuser $0 tray
   fi
   }
 
@@ -356,13 +356,29 @@ function runasuser {
   done
   }
 
+function editcfg {
+  if [[ ! -f $cfg ]]; then
+    gid=`cat /etc/group | grep ^users: | cut -d':' -f3`
+    echo "#You must have write permission to mntroot and history_file" >>"$cfg"
+    echo "mntroot=/media" >>"$cfg"
+    echo "save_history=true" >>"$cfg"
+    echo "history_file=$HOME/.mnttools_history" >>"$cfg"
+    echo "general_mntopts=noatime" >>"$cfg"
+    echo "winfs_mntopts=gid=$gid,umask=002" >>"$cfg"
+    echo "sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=$gid,umask=002" >>"$cfg"
+    echo "ftpfs_mntopts=gid=$gid,umask=002" >>"$cfg"
+    echo "cifs_mntopts=uid=gid=$gid" >>"$cfg"
+  fi
+  which xdg-open && xdg-open "$cfg" || echo "cfg is located at '$cfg'"
+  }
+
 oIFS=$IFS
 if [[ $1 = --config ]]; then
   if [[ -f $2 ]]; then cfg=$2; shift 2; else shift; fi
 fi
 [[ -f ${cfg:=$HOME/.mnttools} ]] && source "$cfg"
 gid=`cat /etc/group | grep ^users: | cut -d':' -f3`
-[[ $USER ]] && runasroot=sudo
+[[ $USER && $USER != root ]] && runasroot=sudo
 run=yes
 mntroot=${mntroot:=/media}
 save_history=${save_history:=true}
@@ -387,6 +403,7 @@ case $1 in
   device) devicemenu ;;
   hist) histmenu ;;
   unmount) unmountmenu ;;
+  editcfg) editcfg ;;
   -h|*help)
     echo $version
     echo "$0                      #show main menu"
@@ -396,9 +413,8 @@ case $1 in
     echo "$0 samba                #mount  via samba"
     echo "$0 device               #mount devices on computer"
     echo "$0 hist                 #mount from history"
-    echo "$0 udevmount            #use in udev rules for automount usb drive and sd card"
-    echo "$0 udevunmount          #use in udev rules to remove mount directory when device is unplugged"
     echo "$0 unmount              #unmount menu"
+    echo "$0 editcfg              #create/edit cfg"
     echo "$0 tray                 #show trayicon" ;;
   *) mainmenu ;;
 esac
