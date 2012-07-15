@@ -63,6 +63,8 @@ CHANGELOG
   v0.3.1
   - fixes remove file from trash
   - fixes remove file already in trashcan
+  v0.3.2
+  - add command to empty trashcans based on uid
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
