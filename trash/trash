@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3.2"
+version="trash v0.3.3"
 
 function info {
   for i; do
@@ -73,7 +73,7 @@ function movetotrash {
     topdir=`stat -c %m "$i"`
     [[ $topdir == $trashcan_mntpoint ]] && localtrash=$trashcan || localtrash=$topdir/.Trash-$USER
     if mkdir -p "$localtrash"/{files,info}; then
-      chmod +t "$localtrash"/{files,info}
+      chmod --quiet +t "$localtrash"/{files,info}
     else
       echo "cannot create local trashcan at $trashcan"
       continue
@@ -109,7 +109,7 @@ function emptycans {
   for i in "${mntpoints[@]}"; do
     j=($i)
     case ${j[2]} in
-      /home) localtrash=$trashcan ;;
+      /home) [[ $id == $USER ]] && localtrash=$trashcan || localtrash=ignore$$ ;;
       /) localtrash=/.Trash-$id ;;
       *) localtrash=${j[2]}/.Trash-$id ;;
     esac
