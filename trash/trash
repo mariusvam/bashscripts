@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3.1"
+version="trash v0.3.2"
 
 function info {
   for i; do
@@ -102,18 +102,18 @@ function delete {
   }
 
 function emptycans {
-  rm -rf "$trashcan"/{files,info}/*
+  [[ $1 = "uid" ]] && id=`id|grep -o uid=[[:digit:]]*|cut -d"=" -f2` || id=$USER
   IFS=$'\n'
   mntpoints=(`mount`)
   IFS=$oIFS
   for i in "${mntpoints[@]}"; do
     j=($i)
     case ${j[2]} in
-      /home) localtrash=$HOME/.Trash ;;
-      /) localtrash=/.Trash-$USER ;;
-      *) localtrash=${j[2]}/.Trash-$USER ;;
+      /home) localtrash=$trashcan ;;
+      /) localtrash=/.Trash-$id ;;
+      *) localtrash=${j[2]}/.Trash-$id ;;
     esac
-    [[ -d $localtrash ]] && rm -rf "$localtrash"/{files,info}/*
+    [[ -d $localtrash && -w $localtrash ]] && rm -rf "$localtrash"/{files,info,expunged}/*
   done
   }
 
@@ -141,7 +141,9 @@ function usage {
   echo "$version"
   echo "$0 [--config cfg] files            #move file to trashcan"
   echo "$0 [--config cfg] --restore files  #restore item to its orginal location"
-  echo "$0 [--config cfg] --empty          #remove all items in trashcan"
+  echo "$0 [--config cfg] --empty          #remove all items in trashcan-username"
+  echo "$0 [--config cfg] --empty-uid      #remove all items in trashcan-uid"
+  echo "$0 [--config cfg] --empty-both     #remove all items in trashcan-{username,uid}"
   echo "$0 [--config cfg] --delete files   #remove selected items in trashcan"
   echo "$0 [--config cfg] --info files     #show trash file info"
   echo "$0 [--config cfg] --list           #list trashcan content"
@@ -164,6 +166,8 @@ case $1 in
   --help|-h) usage ;;
   --info) shift; info "$@" ;;
   --empty) emptycans ;;
+  --empty-uid) emptycans uid ;;
+  --empty-both) emptycans; emptycans uid ;;
   --restore) shift; restore "$@" ;;
   --delete) shift; delete "$@" ;;
   --list) ls --color=auto -l "$trashcan/files" ;;
