@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.3.4"
+version="mnttools v0.3.5"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -166,6 +166,18 @@ function ftpmenu() {
   _mount
   }
 
+function nfsmenu() {
+  mntopts="-o $nfs_mntopts"
+  echo -e "Enter ${green}main menu$none any time (except password field) to return to menu"
+  echo -e $green
+  read -p "Enter server name/ip: " server
+  if [[ $server = "main menu" ]]; then server=; mainmenu; return; fi
+  mntpoint=$mntroot/$server
+  DEVNAME=$server:/
+  echo -e $none
+  _mount
+  }
+
 function smbmenu {
   menutitle="---Samba Network---"
   menu "Browse network" "Manually enter computer name/ip and port" "Main menu"
@@ -258,13 +270,14 @@ function histsave {
 
 function mainmenu {
   menutitle="---Main Menu---"
-  menu "Mount devices on this computer" "Mount image file" "Mount Samba share" "Mount SSH" "Mount FTP" "Mount from history" "Unmount"
+  menu "Mount devices on this computer" "Mount image file" "Mount Samba share" "Mount SSH" "Mount FTP" "Mount NFS" "Mount from history" "Unmount"
   case $choice in
     *devices*) devicemenu ;;
     *image*) imagemenu ;;
     *SSH) sshmenu ;;
     *Samba*) smbmenu ;;
     *FTP) ftpmenu ;;
+    *NFS) nfsmenu ;;
     *history) histmenu ;;
     Unmount) unmountmenu ;;
   esac
@@ -388,6 +401,7 @@ winfs_mntopts=${winfs_mntopts:=gid=$gid,umask=002}
 sshfs_mntopts=${sshfs_mntopts:=reconnect,compression=yes,workaround=rename,gid=$gid,umask=002}
 ftpfs_mntopts=${ftpfs_mntopts:=gid=$gid,umask=002}
 cifs_mntopts=${cifs_mntopts:=gid=$gid}
+nfs_mntopts=${nfs_mntopts:=rw,hard,intr}
 open_cmd=${open_cmd:=xdg-open}
 if [[ -z $conkyrc ]]; then
   for i in /home/*/.conkyrc; do conkyrc=("$conkyrc" "$i"); done
