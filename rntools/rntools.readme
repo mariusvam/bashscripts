@@ -1,0 +1,57 @@
+README for Rename Tools
+
+AUTHOR
+  Tri Le <trile7 at gmail dot com>
+
+SOURCE
+  tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
+  http://aur.archlinux.org/packages.php?ID=61394
+
+DEPENDENCIES
+  coreutils
+
+INSTALL
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from http://aur.archlinux.org/packages/rn/rntools/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
+
+FEATURE
+  - Rename multiple files and folders at once
+  - Change space to underscore and vice versa
+  - Change name to all uppercase or all lower case or uppercase just the first word
+  - Find and replace pattern in name
+  - Insert counter or character at specific position
+  - Remove number of characters at specific position
+  - Preview before commit change
+
+DESCRIPTION
+  This script renames multiple files and folders.  Here are some examples:
+
+  To replace abc by xyz, choose 5, enter find value abc, enter replacment value xyz, preview changes, and then commit
+
+  To replace ab and the next character by xyz, choose 5, enter find value ab?, enter replacement value xyz, preview changes, and then commit
+
+  To remove abc, choose 5, enter find value abc, leave replacement value blank, preview changes, and then commit
+
+  To insert 2 digits counter starting from 1 at the beginning of name (i.e 01-file1, 02-file2, etc.), choose 6, enter 0 for position, enter %- for counter, enter 01 for start counter, preview changes, and then commit
+
+  To insert 3 digits counter starting from 0 at the end of name and keep extension (i.e filea001.txt, fileb002.txt, etc.), choose 6, enter end-ext for position, enter % for counter, enter 001, preview changes, and then commit.
+
+CHANGELOG
+  v0.3
+  - many bugs fixed
+
+COPYING
+  Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
