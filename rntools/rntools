@@ -83,47 +83,46 @@ function x2y {
 
 function insert {
   echo -ne $none
-  if [[ -z $pos ]]; then
+  if [[ -z $p ]]; then
     echo -e "Use ${green}0${none} for the beginning of name, ${green}end${none} for the end of name, or ${green}end-ext${none} for the end of name but keep extension."
     echo -ne $green
-    read -p "Enter p (insert position, required): " pos
-    if ! test $pos -ge 0 2>/dev/null  && [[ $pos != end* ]]; then
-      err "$pos is invalid"
-      pos=""; insert; return 1
+    read -p "Enter p (insert position, required): " p
+    if ! test $p -ge 0 2>/dev/null  && [[ $p != end* ]]; then
+      err "$p is invalid"
+      p=""; insert
     fi
   fi
-  if [[ -z $x ]]; then
-    echo -e "${none}Use ${green}%${none} to insert counter."
+  if [[ -z $x && $p ]]; then
+    echo -e "${none}Use ${green}%${none} for counter."
     echo -ne $green
     read -p "Enter x (character to insert, required): " x
     if [[ -z $x ]]; then
       err "x is required"
-      insert; return 1
+      x=""; insert
     fi
   fi
-  if [[ $x = *%* && -z $counter ]]; then
+  if [[ $x = *%* && -z $c && $p ]]; then
     echo -e "${none}Start counter (include number of digits; i.e. 3 digits counter starting at 1, enter: 001)"
     echo -ne $green
-    read -p "Enter start counter n (n >= 0, required): " counter
-    if ! test $counter -ge 0 2>/dev/null; then
-      err "$counter is invalid"
-      counter=""; insert; return 1
+    read -p "Enter start counter n (n >= 0, required): " c
+    if ! test $c -ge 0 2>/dev/null; then
+      err "$c is invalid"
+      c=""; insert
     fi
-    n=`expr $counter + ${#files[@]} - 1`
-    counter=(`seq -w $counter 1 $n`)
+    n=`expr $c + ${#files[@]} - 1`
+    c=(`seq -w $c 1 $n`)
   fi
-  case $pos in
-    end) p=${#1} ;;
-    end-ext) noext=${1%.*}; p=${#noext} ;;
-    *) p=$pos ;;
+  case $p in
+    end) pos=${#1} ;;
+    end-ext) noext=${1%.*}; pos=${#noext} ;;
+    *) pos=$p ;;
   esac
-  if [[ $counter ]]; then
-    c=${counter[$j]}
-    ((j++))
-    x1=${x//%/$c}
-    newname=${1:0:$p}$x1${1:$p}
+  if [[ $c ]]; then
+    counter=${c[$j]}
+    x1=${x//%/$counter}
+    newname=${1:0:$pos}$x1${1:$pos}
   else
-    newname=${1:0:$p}$x${1:$p}
+    newname=${1:0:$pos}$x${1:$pos}
   fi
   }
 
@@ -135,14 +134,13 @@ function remove {
     read -p "Enter p (remove position, p >= 0, required): " p
     if ! test $p -ge 0 2>/dev/null; then
       err "$p is invalid"
-      p=""; remove; return 1
+      p=""; remove
     fi
   fi
-  [[ $j ]] || read -p "Enter n (number of characters to remove; leave blank to remove all after p): " n
-  j=1
-  [[ $p==0 ]] && x1= || x1=${1:0:p}
-  p=$((p+1))
-  n=
+  [[ $p ]] && read -p "Enter n (number of characters to remove): " n
+  [[ $p -eq 0 ]] && x1="" || x1=${1:0:p}
+  p2=$((p+n))
+  x2=${1:p2}
   newname=$x1$x2
   }
 
@@ -154,18 +152,25 @@ function changename {
   if $cmd; then
     echo -e $none
     echo -e "${bold}Changes preview:"
+    j=0
     for i in "${files[@]}"; do
       $cmd "$i" || continue
+      [[ $newname ]] || newname="${red}SKIPPED"
+      ((j++))
       echo -e "$yellow$i -> $bold$newname"
     done
     echo -e $green
     read -p "Do you want to proceed with rename (Y/n)? " proceed
     echo -e $none
-    if [[ $proceed = n ]]; then
-      mainmenu
+    if [[ $proceed==n ]]; then
+      unset p x c; mainmenu
     else
+      j=0
       for i in "${files[@]}"; do
+        [[ -e $i ]] || echo $i
         $cmd "$i" || continue
+        [[ $newname ]] || continue
+        ((j++))
         if [[ -d $i ]] && [[ $cmd = upper* || $cmd = lower ]]; then
           mv "$i" "$newname$$"
           mv "$newname$$" "$newname"
@@ -181,6 +186,11 @@ function changename {
 
 function mainmenu {
   if [[ -z $1 ]]; then
+    echo "-------------------"
+    echo -e "${bold}Files to be renamed:"
+    echo -ne $yellow
+    for i in "${files[@]}"; do echo $i; done
+    echo -e $none
     menutitle="---Rename Tools---"
     menu "Space_to_underscore" "Underscore to space" "ALL UPPERCASE" "all lowercase" "Uppercase First Letter of Each Word" "Convert x to y" "Insert counter n and/or character x at position p" "Remove n number of characters at position p"
     case $? in
