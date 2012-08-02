@@ -160,14 +160,14 @@ function changename {
       echo -e "$yellow$i -> $bold$newname"
     done
     echo -e $green
-    read -p "Do you want to proceed with rename (Y/n)? " proceed
+    read -p "Do you want to proceed with rename (Y/n)? " ans
     echo -e $none
-    if [[ $proceed==n ]]; then
+    if [[ $ans = n ]]; then
       unset p x c; mainmenu
     else
       j=0
       for i in "${files[@]}"; do
-        [[ -e $i ]] || echo $i
+        [[ -e $i ]] || continue
         $cmd "$i" || continue
         [[ $newname ]] || continue
         ((j++))
