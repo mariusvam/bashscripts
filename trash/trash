@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3.4"
+version="trash v0.3.5"
 
 function info {
   for i; do
@@ -54,6 +54,9 @@ function restore {
 
 function movetotrash {
   for i; do
+    if [[ ! -w $i ]]; then
+      echo "Cannot trash $i.  Permission denied"; continue
+    fi
     if [[ ! -e $i ]]; then
       echo "$i doesn't exist"
       continue
@@ -96,14 +99,14 @@ function delete {
       i2=$trashcan/files/`basename "$i"`
     fi
     infofile=${i/\/files\//\/info\/}.trashinfo
-    info2=${i2/\/files\//\/info\/}.trashinfo
-    rm -f "$i" "$info" "$i2" "$info2"
+    infofile2=${i2/\/files\//\/info\/}.trashinfo
+    rm -Rf "$i" "$infofile" "$i2" "$infofile2"
   done
   }
 
 function emptycans {
   if [[ $1 = "uid" ]]; then id=`id|grep -o uid=[[:digit:]]*|cut -d"=" -f2`
-  else id=$USER; rm -rf "$trashcan"/{files,info,expunged}/*; fi
+  else id=$USER; rm -Rf "$trashcan"/{files,info,expunged}/*; fi
   IFS=$'\n'
   mntpoints=(`mount`)
   IFS=$oIFS
@@ -113,8 +116,9 @@ function emptycans {
       /) localtrash=/.Trash-$id ;;
       *) localtrash=${j[2]}/.Trash-$id ;;
     esac
-    [[ -d $localtrash && -w $localtrash ]] && rm -rf "$localtrash"/{files,info,expunged}/*
+    [[ -d $localtrash && -w $localtrash ]] && rm -Rf "$localtrash"/{files,info,expunged}/*
   done
+  return 0
   }
 
 function dupname { #arg1: filepath arg2: targetdir ret: fullfn
