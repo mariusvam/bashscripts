@@ -69,6 +69,10 @@ CHANGELOG
   - do not empty main trash with empty-uid command
   v0.3.4
   - fix main trashcan doesn't empty if /home is not a mountpoint
+  v0.3.5
+  - fixed trash remove: properly remove directory and infofile in trashcan
+  - fixed trash empty: always return 0 after process completes
+  - fixed trash: display proper error if permission denied.
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
