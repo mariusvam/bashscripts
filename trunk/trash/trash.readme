@@ -73,6 +73,8 @@ CHANGELOG
   - fixed trash remove: properly remove directory and infofile in trashcan
   - fixed trash empty: always return 0 after process completes
   - fixed trash: display proper error if permission denied.
+  v0.3.6
+  - remove the need for full filepath
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
