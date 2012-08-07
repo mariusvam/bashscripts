@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3.5"
+version="trash v0.3.6"
 
 function info {
   for i; do
@@ -54,6 +54,7 @@ function restore {
 
 function movetotrash {
   for i; do
+    i=`readlink -f "$i"`
     if [[ ! -w $i ]]; then
       echo "Cannot trash $i.  Permission denied"; continue
     fi
@@ -63,10 +64,6 @@ function movetotrash {
     fi
     if echo $i | grep -q /*Trash.*/; then
       echo "cannot trash $i because it's already in the trashcan"
-      continue
-    fi
-    if [[ $i != /* ]]; then
-      echo "full filepath is needed for $i"
       continue
     fi
     if [[ `stat -c %s "$i"` -gt $maxsize ]]; then
@@ -85,7 +82,7 @@ function movetotrash {
     [[ -e $trashcan/files/$fullfn ]] && continue
     mv "$i" "$localtrash/files/$fullfn" || continue
     echo -e "[$fullfn trash info]\nPath=$i\nDeletionDate=`date`" > "$localtrash/info/$fullfn.trashinfo"
-    [[ $localtrash == $trashcan ]] && continue
+    [[ $localtrash = $trashcan ]] && continue
     ln -sf "$localtrash/files/$fullfn" "$trashcan/files/$fullfn"
     ln -sf "$localtrash/info/$fullfn.trashinfo" "$trashcan/info/$fullfn.trashinfo"
   done
