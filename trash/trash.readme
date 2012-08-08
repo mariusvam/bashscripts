@@ -75,6 +75,8 @@ CHANGELOG
   - fixed trash: display proper error if permission denied.
   v0.3.6
   - remove the need for full filepath
+  v0.3.7
+  - fixed trash symbolic link
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
