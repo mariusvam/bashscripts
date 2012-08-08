@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3.6"
+version="trash v0.3.7"
 
 function info {
   for i; do
@@ -54,7 +54,8 @@ function restore {
 
 function movetotrash {
   for i; do
-    i=`readlink -f "$i"`
+    dname=`dirname "$i"`
+    cd "$dname"; i=$PWD/`basename "$i"`
     if [[ ! -w $i ]]; then
       echo "Cannot trash $i.  Permission denied"; continue
     fi
