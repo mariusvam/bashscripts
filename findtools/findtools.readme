@@ -6,12 +6,15 @@ AUTHOR
 SOURCE
   tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
   scripts can be viewed at http://code.google.com/p/bashscripts/source/browse/trunk/findtools
+  http://aur.archlinux.org/packages.php?ID=61462
 
 DEPENDENCIES
   coreutils, sed
 
 INSTALL
-  Follow SpaceFM plugin installation here http://ignorantguru.github.com/spacefm/spacefm-manual-en.html#plugins-install
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from http://aur.archlinux.org/packages/fi/findtools/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
 
 FEATURE
   - Find files and folders recursively by name, by size, or by last modified time.
@@ -52,6 +55,8 @@ CHANGELOG
   - fixed changematchingpattern action to reflect above findbyname change
   - add version
   - fixed custom action
+  v0.3
+  - fixed find string for find in file content function
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
