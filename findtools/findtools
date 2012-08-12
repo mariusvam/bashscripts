@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="findtools v0.2"
+version="findtools v0.3"
 oIFS=$IFS
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
@@ -126,7 +126,7 @@ function change {
   echo -e $none
   for i in "${files[@]}"; do
     if [[ $cmd = infile ]]; then
-      sed -i "s/$xstring/$rstring/g" "$i"
+      sed -i "s/$fstring/$rstring/g" "$i"
     else
       newname=${i/$fstring/$rstring}
       mv -vn "$i" "$newname"
@@ -144,9 +144,9 @@ function infile {
   unset files
   echo "Find string is case insensitive and can contain basic regex."
   echo -ne $green
-  read -p "Enter find string: " xstring
+  read -p "Enter find string: " fstring
   echo -e $none
-  if [[ -z $xstring ]]; then
+  if [[ -z $fstring ]]; then
     echo -e "${red}String cannot be emptied. $none"
     infile
   fi
@@ -155,7 +155,7 @@ function infile {
   read -p "File pattern: " fpattern
   echo -e $none
   tmp=/tmp/foundfiles
-  grep -nHIir "$xstring" *"$fpattern"* > $tmp
+  grep -nHIir "$fstring" *"$fpattern"* > $tmp
   while read line; do
     files=( "${files[@]}" "${line%%:*}" )
     echo $line | grep --color=auto -i "$fstring"
