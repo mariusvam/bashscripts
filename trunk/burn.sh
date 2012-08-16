@@ -19,23 +19,30 @@ COMMENT
 #dependencies: cdrtools, dvd+rw-tools
 #optional dependencies: mpg123 or lame or normalize to convert mp3 to wav for audio cd
 
+version="burn v0.2"
 burndir="/tmp/burndir"
 tmpfile="/tmp/burn.txt"
+menutitle=$version
 
+blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
-  echo "---BurnCDDVD Menu---"
   n=0
-  for i in "$@"; do
-    echo "$((n++))) $i"
+  choices=("$@")
+  echo -e "$blue$bold$menutitle"
+  for i in "${choices[@]}"; do
+    echo -e "$none$((n++)))   $yellow$i"
   done
-  echo "Enter c or q to cancel"
-  echo
-  read -p "Enter a number from menu: " i
-  case $i in
-    [0-$n]) return $i ;;
-    c|q) exit 1 ;;
-    *) echo "Invalid entry...please try again!"; menu "$@" ;;
-  esac
+  echo -en "${none}c|q) ${yellow}Cancel"
+  echo -e $green
+  read -p "Enter a choice from above menu: " i
+  echo -e $none
+  [[ $i =~ c|q ]] && exit 1
+  if test $i -lt $n 2>/dev/null; then
+    choice=${choices[i]}; return $i
+  else
+    echo -e "$red$i is an invalid entry...please try again!"
+    menu "${choices[@]}"
+  fi
   }
 
 function burnmenu {
@@ -180,16 +187,16 @@ function cuesheet {
     year="${tags[3]}"
     track="${tags[4]}"
     if [[ $header = "yes" ]]; then
-      echo "REM COMMENT 'Enter genre, album title, album artist, and year in quote.  This line can be removed.'" > $cue
-      echo "REM GENRE ''" >> $cue
-      echo "REM YEAR '$year'" >> $cue
-      echo "TITLE '$title'" >> $cue
-      echo "PERFORMER 'Various Artist'"
+      echo "REM COMMENT \"Enter genre, album title, album artist, and year in quote.  This line can be removed.\"" > $cue
+      echo "REM GENRE \"\"" >> $cue
+      echo "REM YEAR \"$year\"" >> $cue
+      echo "TITLE \"$title\"" >> $cue
+      echo "PERFORMER \"Various Artist\""
       header=no
     fi
-    echo "FILE '$burndir/${i%.*}.wav' WAVE" >> $cue
+    echo "FILE \"$burndir/${i%.*}.wav\" WAVE" >> $cue
     echo "  TRACK $track AUDIO" >> $cue
-    echo "  PERFORMER '$performer'" >> $cue
+    echo "  PERFORMER \"$performer\"" >> $cue
     echo "  INDEX 01 00:00:00" >> $cue
   done
   $EDITOR $cue
@@ -225,6 +232,5 @@ if [[ ${#DEV[@]} -gt 2 ]]; then
   DEV=${DEV[$?]}
 fi
 modemenu
-eject $DEV
 read -p "Clear $burndir content? (Y/n) " i
-[[ $i = "n" ]] || rm -rf "$burndir/*"
+[[ $i = "n" ]] || rm -Rf $burndir/*
