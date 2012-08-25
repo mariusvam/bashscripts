@@ -98,7 +98,7 @@ CHANGELOG
   v0.3.5
   - add nfs mount but not tested
   - fixed mountpoints detection for unmount menu and yad menu
-  - add unmount mountpoint; by pass unmount menu
+  - add unmount mountpoint or device name (skip unmount menu)
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
