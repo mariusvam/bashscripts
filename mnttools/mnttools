@@ -80,6 +80,16 @@ function udevunmount() {
 
 function devicemenu {
   mntopts="-o $general_mntopts"
+  if [[ $1 ]]; then
+    i=(`blkid -o value "$1"`)
+    DEVNAME=$1
+    [[ ${i[2]} = ntfs ]] && fs="-t ntfs-3g" || fs="-t ${i[2]}"
+    [[ $fs =~ vfat|ntfs ]] && mntopts="$mntopts,$winfs_mntopts"
+    label=${i[0]:=${DEVNAME##*/}}
+    mntpoint=$mntroot/$label
+    _mount
+    return
+  fi
   IFS=$'\n'
   [[ `blkid` = "" ]] && sudo blkid
   d=(`blkid -o list | grep "not mounted"`)
@@ -402,7 +412,7 @@ mntroot=${mntroot:=/media}
 save_history=${save_history:=true}
 history_file=${history_file:=$HOME/.mnttools_history}
 general_mntopts=${general_mntopts:=noatime}
-winfs_mntopts=${winfs_mntopts:=gid=$gid,umask=002}
+winfs_mntopts=${winfs_mntopts:=gid=$gid,umask=002,sync}
 sshfs_mntopts=${sshfs_mntopts:=reconnect,compression=yes,workaround=rename,gid=$gid,umask=002}
 ftpfs_mntopts=${ftpfs_mntopts:=gid=$gid,umask=002}
 cifs_mntopts=${cifs_mntopts:=gid=$gid}
@@ -419,7 +429,7 @@ case $1 in
   sshfs) sshmenu ;;
   ftpfs) ftpmenu ;;
   samba) smbmenu ;;
-  device) devicemenu ;;
+  device) devicemenu "$2" ;;
   hist) histmenu ;;
   unmount) unmountmenu "$2";;
   editcfg) editcfg ;;
@@ -430,9 +440,9 @@ case $1 in
     echo "$0 sshfs                            #mount via sshfs"
     echo "$0 ftpfs                            #mount via curlftpfs"
     echo "$0 samba                            #mount  via samba"
-    echo "$0 device                           #mount devices on computer"
+    echo "$0 device [device name]             #mount devices on computer"
     echo "$0 hist                             #mount from history"
-    echo "$0 unmount [mountpoint|device name] #if mountpoint is not supplied, show unmount menu"
+    echo "$0 unmount [mountpoint|device name] #unmount mountpoint in mount folder"
     echo "$0 editcfg                          #create/edit cfg"
     echo "$0 tray                             #show trayicon" ;;
   *) mainmenu ;;
