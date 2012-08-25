@@ -20,7 +20,7 @@ blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1
 function menu {
   n=0
   choices=("$@")
-  echo -e "$blue$bold$menutitle"
+  echo -e "$blue$bold$version - $menutitle"
   for i in "${choices[@]}"; do
     echo -e "$none$((n++)))   $yellow$i"
   done
@@ -84,7 +84,7 @@ function devicemenu {
   [[ `blkid` = "" ]] && sudo blkid
   d=(`blkid -o list | grep "not mounted"`)
   if [[ $d ]]; then
-    menutitle="---Device Menu---"
+    menutitle="Device Menu"
     menu ${d[@]} "Main Menu"
     IFS=$oIFS
     if [[ $choice = "Main Menu" ]]; then mainmenu; return; fi
@@ -179,7 +179,7 @@ function nfsmenu() {
   }
 
 function smbmenu {
-  menutitle="---Samba Network---"
+  menutitle="Samba Network"
   menu "Browse network" "Manually enter computer name/ip and port" "Main menu"
   case $choice in
     Browse*) smbbrowse ;;
@@ -207,14 +207,14 @@ function smbbrowse {
     [[ $port ]] && mntopts=$mntopts,port=$port
   else
     servers=$(eval smbtree $auth -S | grep '\\' | tr -d '\t\\')
-    menutitle="---Samba Servers---"
+    menutitle="Samba Servers"
     menu ${servers[@]} "Main Menu"
     if [[ $choice = "Samba Menu" ]]; then smbmenu; return; fi
     server=${choice%% *}
   fi
   shares=(`eval smbclient $auth -gL $server 2>/dev/null | grep Disk`)
   if [[ $shares ]]; then
-    menutitle="---Samba Shares on $server---"
+    menutitle="Samba Shares on $server"
     menu ${shares[@]} "Samba Menu"
     if [[ $choice = "Samba Menu" ]]; then smbmenu; return; fi
     share=${choice#Disk|}
@@ -232,7 +232,7 @@ function smbbrowse {
 function histmenu {
   IFS=$'\n'
   recent=(`cat "$history_file" 2>/dev/null`)
-  menutitle="---Mount History---"
+  menutitle="Mount History"
   menu ${recent[@]} "Edit history" "Main Menu"
   IFS=$oIFS
   case $choice in
@@ -269,7 +269,7 @@ function histsave {
   }
 
 function mainmenu {
-  menutitle="---Main Menu---"
+  menutitle="Main Menu"
   menu "Mount devices on this computer" "Mount image file" "Mount Samba share" "Mount SSH" "Mount FTP" "Mount NFS" "Mount from history" "Unmount"
   case $choice in
     *devices*) devicemenu ;;
@@ -284,12 +284,16 @@ function mainmenu {
   }
 
 function unmountmenu {
-  if [ $1 ]; then unmount "$1"; return; fi
+  if [ $1 ]; then
+    [[ $1 = $mntroot ]] && mntpoint=$1 || mntpoint=`mount | grep "$1" | cut -d' ' -f3`
+    unmount "$mntpoint"
+    return
+  fi
   for i in "$mntroot"/*; do
     mount | grep -q "$i" && mntpoints=(${mntpoints[@]} "$i")
   done
   if [[ $mntpoints ]]; then
-    menutitle="---Unmount---"
+    menutitle="Unmount"
     menu ${mntpoints[@]} "All"
     if [[ $choice = All ]]; then
       run=no
@@ -421,15 +425,15 @@ case $1 in
   editcfg) editcfg ;;
   -h|*help)
     echo $version
-    echo "$0                      #show main menu"
-    echo "$0 image [file_paths]   #mount image file (iso,img,etc.)"
-    echo "$0 sshfs                #mount via sshfs"
-    echo "$0 ftpfs                #mount via curlftpfs"
-    echo "$0 samba                #mount  via samba"
-    echo "$0 device               #mount devices on computer"
-    echo "$0 hist                 #mount from history"
-    echo "$0 unmount [mountpoint] #if mountpoint is not supplied, show unmount menu"
-    echo "$0 editcfg              #create/edit cfg"
-    echo "$0 tray                 #show trayicon" ;;
+    echo "$0                                  #show main menu"
+    echo "$0 image [file_paths]               #mount image file (iso,img,etc.)"
+    echo "$0 sshfs                            #mount via sshfs"
+    echo "$0 ftpfs                            #mount via curlftpfs"
+    echo "$0 samba                            #mount  via samba"
+    echo "$0 device                           #mount devices on computer"
+    echo "$0 hist                             #mount from history"
+    echo "$0 unmount [mountpoint|device name] #if mountpoint is not supplied, show unmount menu"
+    echo "$0 editcfg                          #create/edit cfg"
+    echo "$0 tray                             #show trayicon" ;;
   *) mainmenu ;;
 esac
