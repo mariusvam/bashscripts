@@ -44,7 +44,7 @@ function yadtray() {
   [[ -e $pipe ]] || (mkfifo $pipe && chmod 666 $pipe)
   exec 3<> $pipe
   for i in "$mntroot"/*; do
-    mount | grep -q "$i" && mntpoints=(${mntpoint[@]} "$i")
+    mount | grep -q "$i" && mntpoints=(${mntpoints[@]} "$i")
   done
   if [[ ! $mntpoints ]]; then
     echo quit >&3
@@ -284,8 +284,9 @@ function mainmenu {
   }
 
 function unmountmenu {
+  if [ $1 ]; then unmount "$1"; return; fi
   for i in "$mntroot"/*; do
-    mount | grep -q "$i" && mntpoints=(${mntpoint[@]} "$i")
+    mount | grep -q "$i" && mntpoints=(${mntpoints[@]} "$i")
   done
   if [[ $mntpoints ]]; then
     menutitle="---Unmount---"
@@ -416,7 +417,7 @@ case $1 in
   samba) smbmenu ;;
   device) devicemenu ;;
   hist) histmenu ;;
-  unmount) unmountmenu ;;
+  unmount) unmountmenu "$2";;
   editcfg) editcfg ;;
   -h|*help)
     echo $version
@@ -427,7 +428,7 @@ case $1 in
     echo "$0 samba                #mount  via samba"
     echo "$0 device               #mount devices on computer"
     echo "$0 hist                 #mount from history"
-    echo "$0 unmount              #unmount menu"
+    echo "$0 unmount [mountpoint] #if mountpoint is not supplied, show unmount menu"
     echo "$0 editcfg              #create/edit cfg"
     echo "$0 tray                 #show trayicon" ;;
   *) mainmenu ;;
