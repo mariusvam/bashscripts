@@ -100,6 +100,9 @@ CHANGELOG
   - fixed mountpoints detection for unmount menu and yad menu
   - skip unmount menu if mountpoint or device name is given
   - skip device menu if device name is given
+  v0.3.6
+  - requires sudo for blkid
+  - fixed unmount menu when unmount fail
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
