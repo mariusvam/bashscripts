@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.3.5"
+version="mnttools v0.3.6"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -81,7 +81,8 @@ function udevunmount() {
 function devicemenu {
   mntopts="-o $general_mntopts"
   if [[ $1 ]]; then
-    i=(`blkid -o value "$1"`)
+    i=(`sudo blkid -o value "$1"`)
+    [[ $i ]] || return
     DEVNAME=$1
     [[ ${i[2]} = ntfs ]] && fs="-t ntfs-3g" || fs="-t ${i[2]}"
     [[ $fs =~ vfat|ntfs ]] && mntopts="$mntopts,$winfs_mntopts"
@@ -91,8 +92,7 @@ function devicemenu {
     return
   fi
   IFS=$'\n'
-  [[ `blkid` = "" ]] && sudo blkid
-  d=(`blkid -o list | grep "not mounted"`)
+  d=(`sudo blkid -o list | grep "not mounted"`)
   if [[ $d ]]; then
     menutitle="Device Menu"
     menu ${d[@]} "Main Menu"
@@ -299,6 +299,7 @@ function unmountmenu {
     unmount "$mntpoint"
     return
   fi
+  unset mntpoints
   for i in "$mntroot"/*; do
     mount | grep -q "$i" && mntpoints=(${mntpoints[@]} "$i")
   done
