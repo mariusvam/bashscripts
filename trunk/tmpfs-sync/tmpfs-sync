@@ -17,23 +17,11 @@
 COMMENT
 
 log="logger -t tmpfs-sync -s"
-ver="tmpfs v0.4"
+ver="tmpfs v0.4.1"
 
 function usage {
-  echo -e "$ver\nUsage: $0 [--config config_file_path] readme|start|sync|stop"; exit 1
+  echo -e "$ver\nUsage: $0 --config config_file readme|start|sync|stop"; exit 1
   }
-
-if [[ $1 = --config ]]; then
-  config=$2; shift 2
-elif [[ $1 = readme ]]; then
-  cat "$0.readme"; exit 0
-fi
-if ! source ${config:=$0.cfg}; then
-  echo "Problem sourcing config file.  Please refer to readme to create config file"; usage
-fi
-if ! mount | grep -q "$tmpfs type tmpfs"; then
-  echo "$tmpfs is not mounted as tmpfs"; exit 1
-fi
 
 function sync2disk() {
   [[ `readlink "$1"` = $tmp ]] || return 2
@@ -64,6 +52,20 @@ function startsync(){
   ln -s "$tmp" "$1" || return 1
   }
 
+if [[ $1 = --config ]]; then
+  config=$2; shift 2
+elif [[ $1 = readme ]]; then
+  readme=`readlink -f "$0"`.readme
+  cat "$readme"; exit 0
+elif ! [[ $1 =~ start|stop|sync ]]; then
+  usage
+fi
+if ! source "$config" &>/dev/null; then
+  echo "Problem sourcing config file.  Please refer to readme to create config file or use sample config file at /usr/share/tmpfs-sync/tmpfs-sync.cfg"; exit 1
+fi
+if ! mount | grep -q "$tmpfs type tmpfs"; then
+  echo "$tmpfs is not mounted as tmpfs"; exit 1
+fi
 action=$1
 for i in "${sync_folders[@]}"; do
   backup=$i-backup
@@ -72,6 +74,5 @@ for i in "${sync_folders[@]}"; do
     start) if startsync "$i"; then $log "$i started"; else $log "$i fails to start"; stopsync "$i"; fi ;;
     stop) sync2disk "$i"; stopsync "$i"; $log "$i stopped" ;;
     sync) sync2disk "$i" ;;
-    *) usage ;;
   esac
 done
