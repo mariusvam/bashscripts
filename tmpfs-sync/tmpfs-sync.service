@@ -1,0 +1,12 @@
+[Unit]
+Description=move any directory to tmpfs for faster access speed and sync it with harddisk
+Wants=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/tmpfs-sync --config /etc/conf.d/tmpfs-sync start
+ExecStop=/usr/bin/tmpfs-sync --config /etc/conf.d/tmpfs-sync stop
+
+[Install]
+WantedBy=multi-user.target
