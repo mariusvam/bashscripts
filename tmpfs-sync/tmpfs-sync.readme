@@ -1,4 +1,4 @@
-README for tmpfs-sync v0.4
+README for tmpfs-sync
 
 AUTHOR
   Tri Le <trile7 at gmail dot com>
@@ -22,9 +22,7 @@ FEATURE
   - Use with any directory.
 
 DESCRIPTION
-  Usage: tmpfs-sync [--config config_file_path] readme|start|sync|stop
-
-  readme command displays this file and then exit
+  Usage: tmpfs-sync --config config_file readme|start|sync|stop
 
   start command copies directories to tmpfs, renames them by adding "-backup" to the end of the name, and then creates symbolic links of the directories to tmpfs.  For example, put /var/log in tmpfs (/tmp)
   - copy /var/log to /tmp/log
@@ -38,20 +36,18 @@ DESCRIPTION
   - remove /tmp/log and /var/log
   - rename /var/log-backup to /var/log
 
-  tmpfs-sync should be run as root and daemon (see tmpfs-sync.rc script) so that it can start and stop properly with the system.  For example, tmpfs-sync runs on system bootup and sync and stop before system power down.  If you'd like to sync changes more often, you can run the sync command manually or add it to cron job (i.e. "/etc/rc.d/tmpfs-sync sync").
+  tmpfs-sync should be run as daemon (see tmpfs-sync.rc or tmpfs-sync.service) so that it can start and stop properly with the system.  For example, tmpfs-sync runs on system bootup and sync and stop before system power down.  If you'd like to sync changes more often, you can run the sync command manually or add it to cron job (i.e. "tmpfs-sync sync").
 
-  By default config filename is tmpfs-sync.cfg located in the same folder as the command.  Custom config file can be specified by using --config parameter.  Config file contains 2 variables: tmpfs and sync_folders
+  Configuration file must be specified by using --config parameter.  You can find an example of the config file at /usr/share/tmpfs-sync.cfg or within the package.  By default, rc/service file uses config file located at /etc/conf.d/tmpfs-sync, you must edit them if your config is in another location.  Config file contains 2 variables: tmpfs and sync_folders
   - tmpfs is the location where tmpfs is mounted.  Default is /tmp.  You can find where tmpfs is mounted by running "mount | grep type.tmpfs"
   - sync_folders is an array of folders (fullpath) to be moved to tmpfs and sync to physical disk on demand.  I'd recommend the following folders: /home/user/.cache, /home/user/.mozilla (firefox profile), /home/user/.config/chromium (chromium profile), /home/user/.config/google-chrome (google chrome profile), and /var/log
 
 CHANGELOG
   v0.3
-    - minor code improvements
-    - sync file as well as directory
-  v0.4
-    - log message in /var/log/messages.log
-    - for startsync, if fail to copy to tmpfs, retry 5 more time.
-    - if startsync fail, revert to original state
+  - minor code improvements
+  - sync file as well as directory
+  v0.4.1
+  - add service file for systemd
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
