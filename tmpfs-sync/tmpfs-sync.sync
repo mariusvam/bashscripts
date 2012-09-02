@@ -1,3 +1,3 @@
 #!/bin/bash
 
-tmpfs-sync sync
+tmpfs-sync --config /etc/conf.d/tmpfs-sync sync
