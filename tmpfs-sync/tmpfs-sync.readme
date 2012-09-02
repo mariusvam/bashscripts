@@ -48,6 +48,8 @@ CHANGELOG
   - sync file as well as directory
   v0.4.1
   - add service file for systemd
+  v0.4.2
+  - repackage to include tmpfs-sync.sync file (for cron job syncing)
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
