@@ -401,6 +401,11 @@ function editcfg {
   which xdg-open && xdg-open "$cfg" || echo "cfg is located at '$cfg'"
   }
 
+function readme {
+  readme=`readlink -f "$0"`.readme
+  cat "$readme"
+  }
+
 oIFS=$IFS
 if [[ $1 = --config ]]; then
   if [[ $3 != editcfg && ! -f $2 ]]; then
@@ -438,6 +443,7 @@ case $1 in
   hist) histmenu ;;
   unmount) unmountmenu "$2";;
   editcfg) editcfg ;;
+  readme) readme ;;
   -h|*help)
     echo $version
     echo "$0                                  #show main menu"
@@ -449,6 +455,7 @@ case $1 in
     echo "$0 hist                             #mount from history"
     echo "$0 unmount [mountpoint|device name] #unmount mountpoint in mount folder"
     echo "$0 editcfg                          #create/edit cfg"
+    echo "$0 readme                           #show readme"
     echo "$0 tray                             #show trayicon" ;;
   *) mainmenu ;;
 esac
