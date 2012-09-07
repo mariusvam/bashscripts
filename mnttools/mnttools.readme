@@ -105,6 +105,7 @@ CHANGELOG
   - fixed unmount menu when unmount fail
   v0.3.7
   - fix error when invalid config file is given
+  - add readme command
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
