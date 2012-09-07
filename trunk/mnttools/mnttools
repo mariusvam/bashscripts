@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.3.6"
+version="mnttools v0.3.7"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -389,21 +389,25 @@ function editcfg {
   if [[ ! -f $cfg ]]; then
     gid=`cat /etc/group | grep ^users: | cut -d':' -f3`
     echo "#You must have write permission to mntroot and history_file" >>"$cfg"
-    echo "mntroot=/media" >>"$cfg"
-    echo "save_history=true" >>"$cfg"
-    echo "history_file=$HOME/.mnttools_history" >>"$cfg"
-    echo "general_mntopts=noatime" >>"$cfg"
-    echo "winfs_mntopts=gid=$gid,umask=002" >>"$cfg"
-    echo "sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=$gid,umask=002" >>"$cfg"
-    echo "ftpfs_mntopts=gid=$gid,umask=002" >>"$cfg"
-    echo "cifs_mntopts=uid=gid=$gid" >>"$cfg"
+    echo "mntroot=$mntroot" >>"$cfg"
+    echo "save_history=$save_history" >>"$cfg"
+    echo "history_file=$history_file" >>"$cfg"
+    echo "general_mntopts=$general_mntopts" >>"$cfg"
+    echo "winfs_mntopts=$winfs_mntopts" >>"$cfg"
+    echo "sshfs_mntopts=$sshfs_mntopts" >>"$cfg"
+    echo "ftpfs_mntopts=$ftpfs_mntopts" >>"$cfg"
+    echo "cifs_mntopts=uid=$cifs_mntopts" >>"$cfg"
   fi
   which xdg-open && xdg-open "$cfg" || echo "cfg is located at '$cfg'"
   }
 
 oIFS=$IFS
 if [[ $1 = --config ]]; then
-  if [[ -f $2 ]]; then cfg=$2; shift 2; else shift; fi
+  if [[ $3 != editcfg && ! -f $2 ]]; then
+    echo -e "${red}config file $2 doesn't exist"
+    exit 1
+  fi
+  cfg=$2; shift 2
 fi
 [[ -f ${cfg:=$HOME/.mnttools} ]] && source "$cfg"
 gid=`cat /etc/group | grep ^users: | cut -d':' -f3`
@@ -413,7 +417,7 @@ mntroot=${mntroot:=/media}
 save_history=${save_history:=true}
 history_file=${history_file:=$HOME/.mnttools_history}
 general_mntopts=${general_mntopts:=noatime}
-winfs_mntopts=${winfs_mntopts:=gid=$gid,umask=002,sync}
+winfs_mntopts=${winfs_mntopts:=gid=$gid,umask=002,flush}
 sshfs_mntopts=${sshfs_mntopts:=reconnect,compression=yes,workaround=rename,gid=$gid,umask=002}
 ftpfs_mntopts=${ftpfs_mntopts:=gid=$gid,umask=002}
 cifs_mntopts=${cifs_mntopts:=gid=$gid}
