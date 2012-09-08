@@ -106,6 +106,8 @@ CHANGELOG
   v0.3.7
   - fix error when invalid config file is given
   - add readme command
+  v0.3.8
+  - write default config if it doesn't exist
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
