@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.3.7"
+version="mnttools v0.3.8"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -385,21 +385,20 @@ function runasuser {
   done
   }
 
-function editcfg {
-  if [[ ! -f $cfg ]]; then
-    gid=`cat /etc/group | grep ^users: | cut -d':' -f3`
-    echo "#You must have write permission to mntroot and history_file" >>"$cfg"
-    echo "mntroot=$mntroot" >>"$cfg"
-    echo "save_history=$save_history" >>"$cfg"
-    echo "history_file=$history_file" >>"$cfg"
-    echo "general_mntopts=$general_mntopts" >>"$cfg"
-    echo "winfs_mntopts=$winfs_mntopts" >>"$cfg"
-    echo "sshfs_mntopts=$sshfs_mntopts" >>"$cfg"
-    echo "ftpfs_mntopts=$ftpfs_mntopts" >>"$cfg"
-    echo "cifs_mntopts=uid=$cifs_mntopts" >>"$cfg"
-  fi
-  which xdg-open && xdg-open "$cfg" || echo "cfg is located at '$cfg'"
-  }
+function writecfg {
+cat<<EOF>$cfg
+#You must have write permission to mntroot and history_file
+mntroot=/media
+save_history=true
+history_file=/home/tri/.mnttools_history
+general_mntopts=noatime
+winfs_mntopts=gid=100,umask=002,flush
+sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=100,umask=002
+ftpfs_mntopts=gid=100,umask=002
+cifs_mntopts=uid=gid=100
+open_cmd=/home/tri/scripts/open
+EOF
+}
 
 function readme {
   readme=`readlink -f "$0"`.readme
@@ -408,11 +407,8 @@ function readme {
 
 oIFS=$IFS
 if [[ $1 = --config ]]; then
-  if [[ $3 != editcfg && ! -f $2 ]]; then
-    echo -e "${red}config file $2 doesn't exist"
-    exit 1
-  fi
   cfg=$2; shift 2
+  [[ -f $cfg ]] || writecfg
 fi
 [[ -f ${cfg:=$HOME/.mnttools} ]] && source "$cfg"
 gid=`cat /etc/group | grep ^users: | cut -d':' -f3`
@@ -442,7 +438,7 @@ case $1 in
   device) devicemenu "$2" ;;
   hist) histmenu ;;
   unmount) unmountmenu "$2";;
-  editcfg) editcfg ;;
+  editcfg) [[ -f $cfg ]] || writecfg; xdg-open "$cfg" ;;
   readme) readme ;;
   -h|*help)
     echo $version
