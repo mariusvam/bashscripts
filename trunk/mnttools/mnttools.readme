@@ -108,6 +108,8 @@ CHANGELOG
   - add readme command
   v0.3.8
   - write default config if it doesn't exist
+  v0.3.9
+  - fix default config file
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
