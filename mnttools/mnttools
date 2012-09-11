@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.3.8"
+version="mnttools v0.3.9"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -385,30 +385,49 @@ function runasuser {
   done
   }
 
-function writecfg {
-cat<<EOF>$cfg
-#You must have write permission to mntroot and history_file
-mntroot=/media
-save_history=true
-history_file=/home/tri/.mnttools_history
-general_mntopts=noatime
-winfs_mntopts=gid=100,umask=002,flush
-sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=100,umask=002
-ftpfs_mntopts=gid=100,umask=002
-cifs_mntopts=uid=gid=100
-open_cmd=/home/tri/scripts/open
-EOF
-}
-
 function readme {
   readme=`readlink -f "$0"`.readme
   cat "$readme"
   }
 
+function writecfg {
+cat <<EOF>$cfg
+# You must have write permission to mntroot and history_file
+mntroot="$mntroot"
+save_history="$save_history"
+history_file="$history_file"
+general_mntopts="$general_mntopts"
+winfs_mntopts="$winfs_mntopts"
+sshfs_mntopts="$sshfs_mntopts"
+ftpfs_mntopts="$ftpfs_mntopts"
+cifs_mntopts="$cifs_mntopts"
+open_cmd="$open_cmd"
+# If you don't want to modify your ~/.conkyrc, enter "none" for "conkyrc" variable
+# conkyrc="none"
+EOF
+}
+
+function usage {
+cat <<EOF
+$version
+$0                                  #show main menu
+$0 image [file_paths]               #mount image file (iso,img,etc.)
+$0 sshfs                            #mount via sshfs
+$0 ftpfs                            #mount via curlftpfs
+$0 samba                            #mount  via samba
+$0 device [device name]             #mount devices on computer
+$0 hist                             #mount from history
+$0 unmount [mountpoint|device name] #unmount mountpoint in mount folder
+$0 editcfg                          #create/edit cfg
+$0 readme                           #show readme
+$0 tray                             #show trayicon
+EOF
+exit
+}
+
 oIFS=$IFS
 if [[ $1 = --config ]]; then
-  cfg=$2; shift 2
-  [[ -f $cfg ]] || writecfg
+  cfg=$2; action=$3
 fi
 [[ -f ${cfg:=$HOME/.mnttools} ]] && source "$cfg"
 gid=`cat /etc/group | grep ^users: | cut -d':' -f3`
@@ -427,7 +446,9 @@ open_cmd=${open_cmd:=xdg-open}
 if [[ -z $conkyrc ]]; then
   for i in /home/*/.conkyrc; do conkyrc=("$conkyrc" "$i"); done
 fi
-case $1 in
+[[ $1 = --config && ! -f $cfg && $# -gt 2 ]] && writecfg
+[[ $action ]] || action=$1
+case $action in
   udevmount) udevmount ;;
   udevunmount) udevunmount ;;
   tray) yadtray & ;;
@@ -440,18 +461,6 @@ case $1 in
   unmount) unmountmenu "$2";;
   editcfg) [[ -f $cfg ]] || writecfg; xdg-open "$cfg" ;;
   readme) readme ;;
-  -h|*help)
-    echo $version
-    echo "$0                                  #show main menu"
-    echo "$0 image [file_paths]               #mount image file (iso,img,etc.)"
-    echo "$0 sshfs                            #mount via sshfs"
-    echo "$0 ftpfs                            #mount via curlftpfs"
-    echo "$0 samba                            #mount  via samba"
-    echo "$0 device [device name]             #mount devices on computer"
-    echo "$0 hist                             #mount from history"
-    echo "$0 unmount [mountpoint|device name] #unmount mountpoint in mount folder"
-    echo "$0 editcfg                          #create/edit cfg"
-    echo "$0 readme                           #show readme"
-    echo "$0 tray                             #show trayicon" ;;
+  -h|*help) usage ;;
   *) mainmenu ;;
 esac
