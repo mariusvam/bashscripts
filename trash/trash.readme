@@ -77,6 +77,9 @@ CHANGELOG
   - remove the need for full filepath
   v0.3.7
   - fixed trash symbolic link
+  v0.3.8
+  - add readme
+  - fix restore from local trash doesn't remove link in main trash
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
