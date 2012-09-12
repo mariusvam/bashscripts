@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3.7"
+version="trash v0.3.8"
 
 function info {
   for i; do
@@ -42,13 +42,13 @@ function restore {
         echo "$f no longer exists...restore fails."
         continue
       fi
-    else f=$i
+    else f=$i; i=$trashcan/files/${i##*/}; infofile2=$trashcan/info/${i##*/}.trashinfo
     fi
     restoredir=`dirname "$opath"`
     dupname "$i" "$restoredir"
     [[ -e $restoredir/$fullfn ]] && continue
     mkdir -p "$restoredir" || continue
-    mv "$f" "$restoredir/$fullfn" && rm -f "$infofile" "$i" "$infofile2"
+    mv "$f" "$restoredir/$fullfn" && rm -f "$i" "$infofile" "$infofile2"
   done
   }
 
@@ -140,18 +140,21 @@ function dupname { #arg1: filepath arg2: targetdir ret: fullfn
   }
 
 function usage {
-  echo "$version"
-  echo "$0 [--config cfg] files            #move file to trashcan"
-  echo "$0 [--config cfg] --restore files  #restore item to its orginal location"
-  echo "$0 [--config cfg] --empty          #remove all items in trashcan-username"
-  echo "$0 [--config cfg] --empty-uid      #remove all items in trashcan-uid"
-  echo "$0 [--config cfg] --empty-both     #remove all items in trashcan-{username,uid}"
-  echo "$0 [--config cfg] --delete files   #remove selected items in trashcan"
-  echo "$0 [--config cfg] --info files     #show trash file info"
-  echo "$0 [--config cfg] --list           #list trashcan content"
-  echo
-  echo "trashcan is $trashcan/files and max file size to trash is $maxsize"
-  }
+cat <<EOF
+$version
+$0 [--config cfg] files            #move file to trashcan
+$0 [--config cfg] --restore files  #restore item to its orginal location
+$0 [--config cfg] --empty          #remove all items in trashcan-username
+$0 [--config cfg] --empty-uid      #remove all items in trashcan-uid
+$0 [--config cfg] --empty-both     #remove all items in trashcan-{username,uid}
+$0 [--config cfg] --delete files   #remove selected items in trashcan
+$0 [--config cfg] --info files     #show trash file info
+$0 [--config cfg] --list           #list trashcan content
+$0 [--config cfg] --readme         #show readme file
+
+trashcan is $trashcan/files and max file size to trash is $maxsize
+EOF
+}
 
 oIFS=$IFS
 if [[ $1 == --config ]]; then
@@ -166,6 +169,7 @@ if ! mkdir -p "$trashcan"/{files,info}; then
 fi
 case $1 in
   --help|-h) usage ;;
+  --readme) readme=`readlink -f "$0"`.readme; cat "$readme" ;;
   --info) shift; info "$@" ;;
   --empty) emptycans ;;
   --empty-uid) emptycans uid ;;
