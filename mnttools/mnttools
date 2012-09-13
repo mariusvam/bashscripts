@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.3.9"
+version="mnttools v0.4.0"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -64,6 +64,9 @@ function udevmount() {
   mntopts="-o $general_mntopts"
   [[ $DEVNAME ]] || return 1
   mount | grep -q $DEVNAME && return 1
+  if [[ $check_fstab = true ]]; then
+    grep -q -e $DEVNAME -e $ID_FS_UUID /etc/fstab && return 1
+  fi
   label=${ID_FS_LABEL:=$ID_VENDOR}
   [[ $label ]] || label=${DEVNAME##*/}
   mntpoint=$mntroot/${label//[\\ ]/_}
@@ -365,6 +368,7 @@ function unmount {
   }
 
 function modconkyrc {
+  [[ $i = none ]] && return
   for i in "${conkyrc[@]}"; do
     [[ -f $i ]] || continue
     if [[ $1 = add && $DEVNAME = /dev/* ]]; then
@@ -385,11 +389,6 @@ function runasuser {
   done
   }
 
-function readme {
-  readme=`readlink -f "$0"`.readme
-  cat "$readme"
-  }
-
 function writecfg {
 cat <<EOF>$cfg
 # You must have write permission to mntroot and history_file
@@ -402,6 +401,7 @@ sshfs_mntopts="$sshfs_mntopts"
 ftpfs_mntopts="$ftpfs_mntopts"
 cifs_mntopts="$cifs_mntopts"
 open_cmd="$open_cmd"
+check_fstab="$check_fstab"
 # If you don't want to modify your ~/.conkyrc, enter "none" for "conkyrc" variable
 # conkyrc="none"
 EOF
@@ -443,6 +443,7 @@ ftpfs_mntopts=${ftpfs_mntopts:=gid=$gid,umask=002}
 cifs_mntopts=${cifs_mntopts:=gid=$gid}
 nfs_mntopts=${nfs_mntopts:=rw,hard,intr}
 open_cmd=${open_cmd:=xdg-open}
+check_fstab=${$check_fstab:=true}
 if [[ -z $conkyrc ]]; then
   for i in /home/*/.conkyrc; do conkyrc=("$conkyrc" "$i"); done
 fi
@@ -460,7 +461,7 @@ case $action in
   hist) histmenu ;;
   unmount) unmountmenu "$2";;
   editcfg) [[ -f $cfg ]] || writecfg; xdg-open "$cfg" ;;
-  readme) readme ;;
+  readme) readme=`readlink -f "$0"`.readme; cat "$readme" ;;
   -h|*help) usage ;;
   *) mainmenu ;;
 esac
