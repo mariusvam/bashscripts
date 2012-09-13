@@ -443,7 +443,7 @@ ftpfs_mntopts=${ftpfs_mntopts:=gid=$gid,umask=002}
 cifs_mntopts=${cifs_mntopts:=gid=$gid}
 nfs_mntopts=${nfs_mntopts:=rw,hard,intr}
 open_cmd=${open_cmd:=xdg-open}
-check_fstab=${$check_fstab:=true}
+check_fstab=${check_fstab:=true}
 if [[ -z $conkyrc ]]; then
   for i in /home/*/.conkyrc; do conkyrc=("$conkyrc" "$i"); done
 fi
