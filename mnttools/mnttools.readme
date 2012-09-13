@@ -110,6 +110,8 @@ CHANGELOG
   - write default config if it doesn't exist
   v0.3.9
   - fix default config file
+  v0.4.0
+  - add check_fstab, do not auto mount if device is in fstab
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
