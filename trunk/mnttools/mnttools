@@ -15,12 +15,12 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.4.1"
-blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
+version="mnttools v0.4.2"
+blue='\e[1;34m\e[47m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
   choices=("$@")
-  echo -e "$blue$bold$version - $menutitle"
+  echo -e "$blue$version - $menutitle$none"
   for i in "${choices[@]}"; do
     echo -e "$none$((n++)))   $yellow$i"
   done
@@ -231,11 +231,10 @@ function smbbrowse {
   }
 
 function histmenu {
-  IFS=$'\n'
-  recent=(`cat "$history_file" 2>/dev/null`)
+  recent=(`cat "$history_file" | cut -d'|' -f1`)
   menutitle="Mount History"
   menu ${recent[@]} "Edit history" "Main Menu"
-  IFS=$oIFS
+  l=$(($?+1))
   case $choice in
     Main*) mainmenu ;;
     Edit*)
@@ -247,16 +246,12 @@ function histmenu {
       fi
       histmenu ;;
     *)
-      fs=; mntopts=; DEVNAME=; mntpoint=
-      IFS='|'; n=0
-      for i in $choice; do
-        [[ $i = -t* ]] && fs=$i
-        [[ $i = -o* ]] && mntopts=$i
-        [[ $n -eq 0 ]] && DEVNAME=$i
-        [[ $n -eq 1 ]] && mntpoint=$i
-        ((n++))
-      done
-      IFS=$oIFS
+      unset fs mntopts DEVNAME mntpoint
+      data=`grep -n $choice "$history_file" | grep ^$l:`
+      DEVNAME=$choice
+      mntpoint=`echo $data | cut -d'|' -f2`
+      fs=`echo $data | cut -d'|' -f3`
+      mntopts=`echo $data | cut -d'|' -f4`
       _mount ;;
   esac
   }
@@ -281,7 +276,7 @@ function mainmenu {
     *NFS) nfsmenu ;;
     *history) histmenu ;;
     Unmount) unmountmenu ;;
-    *conkyfc) modconkyrc removeall ;;
+    *conkyrc) modconkyrc removeall ;;
     Remount*) remountmenu ;;
   esac
   }
@@ -318,12 +313,12 @@ function remountmenu {
     eval "`lsblk -P -o NAME,MOUNTPOINT | grep ${1##*/}`"
   else
     IFS=$'\n'
-    d=(`lsblk -P -o NAME,MOUNTPOINT | grep $mntroot`)
+    d=(`mount | grep $mntroot | cut -d' ' -f1-3`)
     menutitle="Remount Device Menu"
     menu ${d[@]} "Main Menu"
     IFS=$oIFS
     if [[ $choice = "Main Menu" ]]; then mainmenu; return; fi
-    eval "$choice"
+    eval "`lsblk -P -o NAME,MOUNTPOINT ${choice[0]}`"
   fi
   unmount "$MOUNTPOINT"
   sleep 1
@@ -441,13 +436,13 @@ oIFS=$IFS
 if [[ $1 = --config ]]; then
   cfg=$2; action=$3
 fi
-[[ -f ${cfg:=$HOME/.mnttools} ]] && source "$cfg"
+[[ -f ${cfg:=~/.mnttools} ]] && source "$cfg"
 gid=`cat /etc/group | grep ^users: | cut -d':' -f3`
 [[ $USER && $USER != root ]] && runasroot=sudo
 run=yes
 mntroot=${mntroot:=/media}
 save_history=${save_history:=true}
-history_file=${history_file:=$HOME/.mnttools_history}
+history_file=${history_file:=~/.mnttools_history}
 general_mntopts=${general_mntopts:=noatime}
 winfs_mntopts=${winfs_mntopts:=gid=$gid,umask=002,flush}
 sshfs_mntopts=${sshfs_mntopts:=reconnect,compression=yes,workaround=rename,gid=$gid,umask=002}
