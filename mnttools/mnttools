@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.4.0"
+version="mnttools v0.4.1"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -84,35 +84,23 @@ function udevunmount() {
 function devicemenu {
   mntopts="-o $general_mntopts"
   if [[ $1 ]]; then
-    i=(`sudo blkid -o value "$1"`)
-    [[ $i ]] || return
-    DEVNAME=$1
-    [[ ${i[2]} = ntfs ]] && fs="-t ntfs-3g" || fs="-t ${i[2]}"
-    [[ $fs =~ vfat|ntfs ]] && mntopts="$mntopts,$winfs_mntopts"
-    label=${i[0]:=${DEVNAME##*/}}
-    mntpoint=$mntroot/$label
-    _mount
-    return
-  fi
-  IFS=$'\n'
-  d=(`sudo blkid -o list | grep "not mounted"`)
-  if [[ $d ]]; then
+    eval "`lsblk -P -o NAME,FSTYPE,LABEL $1`"
+    [[ $FSTYPE ]] || return
+  else
+    IFS=$'\n'
+    d=(`lsblk -P -o NAME,FSTYPE,LABEL,MOUNTPOINT | grep -e MOUNTPOINT=\"\" | grep -v -e FSTYPE=\"\" | cut -d' ' -f1-3`)
     menutitle="Device Menu"
     menu ${d[@]} "Main Menu"
     IFS=$oIFS
     if [[ $choice = "Main Menu" ]]; then mainmenu; return; fi
-    i=($choice)
-    DEVNAME=${i[0]}
-    [[ ${i[1]} = ntfs ]] && fs="-t ntfs-3g" || fs="-t ${i[1]}"
-    [[ $fs =~ vfat|ntfs ]] && mntopts="$mntopts,$winfs_mntopts"
-    label=${i[2]:=${DEVNAME##*/}}
-    mntpoint=$mntroot/$label
-    _mount
-  else
-    IFS=$oIFS
-    echo -e "${red}Cannot find any not mounted device $none"
-    mainmenu
+    eval "$choice"
   fi
+  DEVNAME=/dev/$NAME
+  [[ $FSTYPE = ntfs ]] && fs="-t ntfs-3g" || fs="-t $FSTYPE"
+  [[ $fs =~ vfat|ntfs ]] && mntopts="$mntopts,$winfs_mntopts"
+  label=${LABEL:=${DEVNAME##*/}}
+  mntpoint=$mntroot/$label
+  _mount
   }
 
 function imagemenu {
@@ -283,7 +271,7 @@ function histsave {
 
 function mainmenu {
   menutitle="Main Menu"
-  menu "Mount devices on this computer" "Mount image file" "Mount Samba share" "Mount SSH" "Mount FTP" "Mount NFS" "Mount from history" "Unmount"
+  menu "Mount devices on this computer" "Mount image file" "Mount Samba share" "Mount SSH" "Mount FTP" "Mount NFS" "Mount from history" "Unmount" "Remove all entries from conkyrc" "Remount Device"
   case $choice in
     *devices*) devicemenu ;;
     *image*) imagemenu ;;
@@ -293,11 +281,13 @@ function mainmenu {
     *NFS) nfsmenu ;;
     *history) histmenu ;;
     Unmount) unmountmenu ;;
+    *conkyfc) modconkyrc removeall ;;
+    Remount*) remountmenu ;;
   esac
   }
 
 function unmountmenu {
-  if [ $1 ]; then
+  if [[ $1 ]]; then
     [[ $1 = $mntroot ]] && mntpoint=$1 || mntpoint=`mount | grep "$1" | cut -d' ' -f3`
     unmount "$mntpoint"
     return
@@ -323,6 +313,23 @@ function unmountmenu {
   mainmenu
   }
 
+function remountmenu {
+  if [[ $1 ]]; then
+    eval "`lsblk -P -o NAME,MOUNTPOINT | grep ${1##*/}`"
+  else
+    IFS=$'\n'
+    d=(`lsblk -P -o NAME,MOUNTPOINT | grep $mntroot`)
+    menutitle="Remount Device Menu"
+    menu ${d[@]} "Main Menu"
+    IFS=$oIFS
+    if [[ $choice = "Main Menu" ]]; then mainmenu; return; fi
+    eval "$choice"
+  fi
+  unmount "$MOUNTPOINT"
+  sleep 1
+  devicemenu "/dev/$NAME"
+  }
+
 function _mount() { #require: DEVNAME mntpoint mntopts
   [[ $DEVNAME && $mntpoint ]] || return 1
   if i=`mount | grep -q "$DEVNAME"`; then
@@ -338,7 +345,7 @@ function _mount() { #require: DEVNAME mntpoint mntopts
     -t*ftpfs) curlftpfs "$DEVNAME" "$mntpoint" $mntopts; echo "mount command: curlftpfs $DEVNAME $mntpoint $mntopts" ;;
     *) $runasroot mount $fs $mntopts "$DEVNAME" "$mntpoint"; echo "mount command: $runasroot mount $fs $mntopts $DEVNAME $mntpoint" ;;
   esac
-  if [[ $? -eq 0 ]]; then
+  if mount | grep -q "$mntpoint"; then
     histsave
     modconkyrc add
     echo "$DEVNAME is mounted at $mntpoint"
@@ -372,9 +379,12 @@ function modconkyrc {
   for i in "${conkyrc[@]}"; do
     [[ -f $i ]] || continue
     if [[ $1 = add && $DEVNAME = /dev/* ]]; then
-      echo -e "\${color slate grey}${mntpoint##*/}:\${fs_size $mntpoint} \${color orange}U:\${fs_used $mntpoint} \${color}F:\${fs_free $mntpoint}\n\$color\${fs_bar $mntpoint} \${color orange}\${diskio ${DEVNAME##*/}}" >>"$i"
+      echo -e "\${color slate grey}${mntpoint##*/}:\${fs_size $mntpoint} \${color orange}U:\${fs_used $mntpoint} \${color}F:\${fs_free $mntpoint} \${if_empty mnttools_entry}\$endif" >>"$i"
+      echo -e "\$color\${fs_bar $mntpoint} \${color orange}\${diskio ${DEVNAME##*/}} \${if_empty mnttools_entry}\$endif" >>"$i"
     elif [[ $1 = remove ]]; then
-      sed -i "/${mntpoint##*\/}/d" "$i"
+      sed -i "/${mntpoint##*\/}.*mnttools/d" "$i"
+    elif [[ $1 = removeall ]]; then
+      sed -i "/mnttools_entry/d" "$i"
     fi
   done
   }
@@ -421,6 +431,8 @@ $0 unmount [mountpoint|device name] #unmount mountpoint in mount folder
 $0 editcfg                          #create/edit cfg
 $0 readme                           #show readme
 $0 tray                             #show trayicon
+$0 conkyrc_remove                   #remove all mnttools conkyrc entries
+$0 remount [mountpoint|device name] #remount device
 EOF
 exit
 }
@@ -458,10 +470,12 @@ case $action in
   ftpfs) ftpmenu ;;
   samba) smbmenu ;;
   device) devicemenu "$2" ;;
+  remount) remountmenu "$2" ;;
   hist) histmenu ;;
   unmount) unmountmenu "$2";;
   editcfg) [[ -f $cfg ]] || writecfg; xdg-open "$cfg" ;;
   readme) readme=`readlink -f "$0"`.readme; cat "$readme" ;;
+  conkyrc_remove) modconkyrc removeall ;;
   -h|*help) usage ;;
   *) mainmenu ;;
 esac
