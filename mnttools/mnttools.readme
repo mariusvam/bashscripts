@@ -46,9 +46,9 @@ DESCRIPTION
   - sshfs_mntopts=reconnect,compression=yes,workaround=rename,gid=100,umask=002 #mount options for ssh share
   - ftpfs_mntopts=gid=100,umask=002 #mount options for ftp share
   - cifs_mntopts=gid=100 #mount options for Samba share
-  - conkyrc=/home/*/.conkyrc #write mounting information to conkyrc files.  Define them as an array.
+  - conkyrc=/home/*/.conkyrc #write mounting information to conkyrc files.  Define them as an array.  Set it to "none" to skip this feature.
 
-  Commands are help, image [file_path], sshfs, ftpfs, samba, device, hist, udevmount, udevunmount, unmount, and tray
+  Commands are help, image, sshfs, ftpfs, samba, device, hist, udevmount, udevunmount, unmount, tray, editcfg, readme, conkyrc_remove, and remount
 
   - If command is not given, main menu is shown with commands listed
   - help: shows a list of commands and short descriptions
@@ -56,18 +56,22 @@ DESCRIPTION
   - sshfs: you'll be prompted to enter server name/ip, start directory (i.e. / or leave blank to use home directory defined by ssh server), port (leave blank to use default), and username (enter if different than current user).  It will ask for password if RSA key authentication is not used.
   - ftpfs: you'll be prompted to enter server name/ip, port (leave blank to use default), username, and password (leave blank if you don't want password save in history)
   - samba: you'll be ask to enter username and password (leave password blank if you don't want it save in history).  You can choose to browse for server on network or enter server name/ip manually, and then choose a share folder.
-  - device: you'll be able to mount media on the computer that is not currently mounted (i.e. mount cd/dvd, usb drive, unmounted partition, etc.)
+  - device [device name]: you'll be able to mount media on the computer that is not currently mounted (i.e. mount cd/dvd, usb drive, unmounted partition, etc.).  You can specify device name (i.e /dev/sdb1) directly to bypass menu.
   - hist: mount previously mounted Samba/SSH/FTP shares
-  - unmount: unmount menu
+  - unmount [mountpoint or device name]: unmount menu or you can specify mountpoint (i.e /media/usb1) or device name (i.e /dev/sdb1) to bypass menu
   - tray: show trayicon if there is mounted media
-  - udevmount/udevunmount: use in udev rules to automatically mount usb drive or sd card on insert.  Here is an example of the rule:
+  - udevmount/udevunmount: use in udev rules to automatically mount usb drive or sd card on insert.  By default, it will not auto mount device that is present in fstab.  Here is an example of the rule:
     KERNEL!="sd[b-z][0-9]|mmcblk[0-9]p[0-9]", GOTO="mount_end"
     ACTION=="add", PROGRAM!="/sbin/blkid %N", GOTO="mount_end"
     ACTION=="add", RUN+="/usr/bin/mnttools udevmount"
     ACTION=="remove", RUN+="/usr/bin/mnttools udevunmount"
     LABEL="mount_end
+  - editcfg: open config file using xdg-open.  If config file doesn't exist, a default one will be created.
+  - readme: print this readme
+  - conkyrc_remove: remove all mnttools entries in conkyrc file
+  - remount [mountpoint|device name]: unmount and then mount device.  If mountpoint or device name is not given, a menu with a list of remountable devices will be shown.
 
-  If conkyrc file exists, device info (total space, used space, free space, and disk io) for block device will be written to the end of the file.  When the device is disconnect using this script, the entries in conkyrc file will be removed.
+  If conkyrc file exists, device info (total space, used space, free space, and disk io) for block device will be written to the end of the file.  When the device is disconnect using this script, the entries in conkyrc file will be removed.  To prevent mnttools to write to conkyrc, enter conkyrc=none in config file.
 
   If you want to allow users to mount/unmount without entering password, edit sudoers as follow:
   - type: sudo visudo
@@ -112,6 +116,10 @@ CHANGELOG
   - fix default config file
   v0.4.0
   - add check_fstab, do not auto mount if device is in fstab
+  v0.4.1
+  - add conkyrc_remove to remove all mnttools entries in conkyrc
+  - use lsblk instead of blkid
+  - add remount
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
