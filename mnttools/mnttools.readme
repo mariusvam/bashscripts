@@ -120,6 +120,11 @@ CHANGELOG
   - add conkyrc_remove to remove all mnttools entries in conkyrc
   - use lsblk instead of blkid
   - add remount
+  v0.4.2
+  - use "~" instead of "$HOME"
+  - use mount to list devices for remountmenu instead of lsblk
+  - change history menu display
+  - add white background to menu title
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
