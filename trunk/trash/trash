@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3.8"
+version="trash v0.3.9"
 
 function info {
   for i; do
@@ -63,16 +63,16 @@ function movetotrash {
       echo "$i doesn't exist"
       continue
     fi
-    if echo $i | grep -q /*Trash.*/; then
-      echo "cannot trash $i because it's already in the trashcan"
-      continue
-    fi
     if [[ `stat -c %s "$i"` -gt $maxsize ]]; then
       echo "skip $i because it's larger than $maxsize"
       continue
     fi
     topdir=`stat -c %m "$i"`
     [[ $topdir == $trashcan_mntpoint ]] && localtrash=$trashcan || localtrash=$topdir/.Trash-$USER
+    if echo $i | grep -q $localtrash; then
+      echo "cannot trash $i because it's already in the trashcan"
+      continue
+    fi
     if mkdir -p "$localtrash"/{files,info}; then
       chmod --quiet +t "$localtrash"/{files,info}
     else
