@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="findtools v0.3"
+version="findtools v0.3.1"
 oIFS=$IFS
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
@@ -59,9 +59,10 @@ function actionmenu {
   [[ $cmd = byname ]] && strmenu="Change matching pattern to (exact match is required)"
   [[ $cmd = infile ]] && strmenu=( "Change matching pattern to (exact match is required)" "Delete line matching pattern (exact match is required)" )
   menutitle="---What to do with found files?---"
-  menu "Copy to" "Move to" "Delete" "${strmenu[@]}" "Custom command" "Back to find menu"
+  menu "Copy to" "Copy to - keep directory structure" "Move to" "Delete" "${strmenu[@]}" "Custom command" "Back to find menu"
   case $choice in
     *find*) findmenu ;;
+    Copy*structure) copystructure ;;
     Copy*) copy ;;
     Move*) move ;;
     Delete) deletefile ;;
@@ -85,6 +86,18 @@ function customcmd {
     echo -e "${red}Custom command cannot be emptied"
     customcmd
   fi
+  }
+
+function copystructure {
+  echo -ne $green
+  read -p "Enter destination location: " dest
+  echo -e $none
+  for i in "${files[@]}"; do
+    dir_structure=`dirname ${i#*/}`
+    dest2="$dest/$dir_structure"
+    mkdir -p $dest2
+    cp -vna "$i" "$dest2"
+  done
   }
 
 function copy {
