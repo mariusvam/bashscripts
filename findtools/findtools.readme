@@ -57,6 +57,8 @@ CHANGELOG
   - fixed custom action
   v0.3
   - fixed find string for find in file content function
+  v0.3.1
+  - add "copy to - keep directory structure"
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
