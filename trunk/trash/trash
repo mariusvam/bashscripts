@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="trash v0.3.9"
+version="trash v0.4.0"
 
 function info {
   for i; do
@@ -104,7 +104,10 @@ function delete {
 
 function emptycans {
   if [[ $1 = "uid" ]]; then id=`id|grep -o uid=[[:digit:]]*|cut -d"=" -f2`
-  else id=$USER; rm -Rf "$trashcan"/{files,info,expunged}/*; fi
+  else
+    id=$USER
+    rm -Rf "$trashcan"/{files,info,expunged}/{*,.*} 2>/dev/null
+  fi
   IFS=$'\n'
   mntpoints=(`mount`)
   IFS=$oIFS
@@ -114,7 +117,7 @@ function emptycans {
       /) localtrash=/.Trash-$id ;;
       *) localtrash=${j[2]}/.Trash-$id ;;
     esac
-    [[ -d $localtrash && -w $localtrash ]] && rm -Rf "$localtrash"/{files,info,expunged}/*
+    [[ -d $localtrash && -w $localtrash ]] && rm -Rf "$localtrash"/{files,info,expunged}/{*,.*} 2>/dev/null
   done
   return 0
   }
