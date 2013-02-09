@@ -63,9 +63,10 @@ function checkmail(){
     else
       cp "$ICON" "$img"
     fi
+    n=0
     while read line; do
       i=`echo ${line:0:50} | iconv -f ISO88592 -t UTF8 | tr -d '&'`
-      tip=$tip$i'\n '
+      [[ $((n++))=$mailcount ]] && tip=$tip$i || tip=$tip$i'\n '
     done < "$mail"
   else
     convert "$ICON" -gravity Center -pointsize 24 -annotate 0 "X" "$img"
