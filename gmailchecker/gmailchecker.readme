@@ -42,10 +42,12 @@ DESCRIPTION
 
 CHANGELOG
   v0.1
-    - initial release
+  - initial release
   v0.2
-    - fix run in background with custom config file
-    - fix default values for new config file
+  - fixed run in background with custom config file
+  - fixed default values for new config file
+  v0.2.1
+  - fixed empty line at the end of tooltip
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
