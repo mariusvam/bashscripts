@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.4.2"
+version="mnttools v0.4.3"
 blue='\e[1;34m\e[47m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -50,13 +50,19 @@ function yadtray() {
     echo quit >&3
     return
   fi
-  pgrep -u ${USER:=$u} -f Mounted.*notification &>/dev/null || $y --text="Mounted Media" --image=gtk-harddisk --notification --command="$0 tray" --listen <&3 &
+  pgrep -u ${USER:=$u} -f Mounted.*notification &>/dev/null || $y --text="Mounted Media" --image=gtk-harddisk --notification --command="$0 showmount" --listen <&3 &
+  }
+
+function showmount() {
   pkill -f ${0##*/}.*mountpoints
-  mntpoint=`$y --center --title ${0##*/} --window-icon=gtk-harddisk --timeout=10 --height=200 --button gtk-open:0 --button gtk-disconnect:2 --list --column mountpoints ${mntpoints[@]}`
+  for i in "$mntroot"/*; do
+    mount | grep -q "$i" && mntpoints=(${mntpoints[@]} "$i")
+  done
+  mntpoint=`yad --center --title ${0##*/} --window-icon=gtk-harddisk --timeout=30 --height=200 --button gtk-open:0 --button gtk-disconnect:2 --list --column mountpoints ${mntpoints[@]}`
   case $? in
     0) $open_cmd "${mntpoint%|}" ;;
-    2) unmount "${mntpoint%|}" | $y --on-top --center --no-buttons --skip-taskbar --undecorated --fixed --progress --pulsate --auto-close --progress-text "Unmounting ${mntpoint%|}...please wait..."
-    [[ -e ${mntpoint%|} ]] && $y --center --title ${0##*/} --window-icon=gtk-harddisk --button gtk-ok:0 --image gtk-stop --text "<b>${mntpoint%|}</b> is busy...DO NOT remove" || $y --center --title ${0##*/} --window-icon=gtk-harddisk --button gtk-ok:0 --image gtk-apply --text "<b>${mntpoint%|}</b> is unmounted" ;;
+    2) unmount "${mntpoint%|}" | yad --on-top --center --no-buttons --skip-taskbar --undecorated --fixed --progress --pulsate --auto-close --progress-text "Unmounting ${mntpoint%|}...please wait..."
+    [[ -e ${mntpoint%|} ]] && yad --center --title ${0##*/} --window-icon=gtk-harddisk --button gtk-ok:0 --image gtk-stop --text "<b>${mntpoint%|}</b> is busy...DO NOT remove" || yad --center --title ${0##*/} --window-icon=gtk-harddisk --button gtk-ok:0 --image gtk-apply --text "<b>${mntpoint%|}</b> is unmounted" ;;
   esac
   }
 
@@ -460,6 +466,7 @@ case $action in
   udevmount) udevmount ;;
   udevunmount) udevunmount ;;
   tray) yadtray & ;;
+  showmount) showmount ;;
   image) shift; imagemenu "$@" ;;
   sshfs) sshmenu ;;
   ftpfs) ftpmenu ;;
