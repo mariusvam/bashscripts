@@ -16,7 +16,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="gmailchecker v0.2.1"
+version="gmailchecker v0.2.2"
 oIFS=$IFS
 
 function createcfg(){
@@ -65,14 +65,15 @@ function checkmail(){
     fi
     n=0
     while read line; do
-      i=`echo ${line:0:50} | iconv -f ISO88592 -t UTF8 | tr -d '&'`
-      [[ $((n++))=$mailcount ]] && tip=$tip$i || tip=$tip$i'\n '
+      i=`echo ${line:0:50} | tr -d '&'`
+      [[ $((n++)) -eq $mailcount ]] && tip=$tip$i || tip=$tip$i'\n '
     done < "$mail"
   else
     convert "$ICON" -gravity Center -pointsize 24 -annotate 0 "X" "$img"
     tip="cannot access gmail!"
   fi
   echo "tooltip:$tip" >&4
+  echo "tooltip:$tip" > /tmp/tooltip.txt
   echo "action:$RUN" >&4
   echo "icon:$img" >&4
   [[ $OPEN ]] && opengmail="open gmail!$OPEN https://mail.google.com||"
@@ -81,7 +82,7 @@ function checkmail(){
 
 function on_exit(){
   echo quit >&4
-  find "$tmpdir" -name "${cfg##*/}.*" -exec rm '{}' +
+  find "$tmpdir" -name "gmailchecker.*" -exec rm '{}' +
   exit
   }
 
@@ -90,11 +91,11 @@ if [[ $1 = -c ]]; then cfg=$2; shift 2; fi
 touch "${cfg:=$HOME/.gmailchecker}" || exit 1
 tmpdir=/tmp/gmailchecker
 mkdir -p "$tmpdir"
-pipe=$tmpdir/${cfg##*/}.pipe
-img=$tmpdir/${cfg##*/}.png
-mail=$tmpdir/${cfg##*/}.txt
-_mail=$tmpdir/${cfg##*/}.old
-pid=$tmpdir/${cfg##*/}.pid
+pipe=$tmpdir/gmailchecker.pipe
+img=$tmpdir/gmailchecker.png
+mail=$tmpdir/gmailchecker.txt
+_mail=$tmpdir/gmailchecker.old
+pid=$tmpdir/gmailchecker.pid
 [[ -e $pipe ]] || mkfifo "$pipe"
 exec 4<>"$pipe"
 case $1 in
