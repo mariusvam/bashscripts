@@ -48,6 +48,8 @@ CHANGELOG
   - fixed default values for new config file
   v0.2.1
   - fixed empty line at the end of tooltip
+  v0.2.2
+  - fixed tooltip
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
