@@ -1,4 +1,4 @@
-README for gmailchecker v0.2
+README for gmailchecker
 
 AUTHOR
   Tri Le <trile7 at gmail dot com>
@@ -14,7 +14,7 @@ DEPENDENCIES
 
 INSTALL
   This installation procedure is for Arch's system.
-  - download aur PKGBUILD from https://aur.archlinux.org/packages/mn/mnttools/PKGBUILD
+  - download aur PKGBUILD from http://aur.archlinux.org/packages/gm/gmailchecker/PKGBUILD
   - in folder where PKGBUILD is stored, run "makepkg -i"
 
 FEATURE
@@ -50,6 +50,8 @@ CHANGELOG
   - fixed empty line at the end of tooltip
   v0.2.2
   - fixed tooltip
+  v0.2.3
+  - remove tr and iconv on tooltip
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
