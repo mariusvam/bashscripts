@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="mnttools v0.4.3"
+version="mnttools v0.4.4"
 blue='\e[1;34m\e[47m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 function menu {
   n=0
@@ -339,7 +339,7 @@ function _mount() { #require: DEVNAME mntpoint mntopts
     return 1
   fi
   n=1
-  while [[ "$(ls -A $mntpoint/ 2>/dev/null)" ]]; do mntpoint=$mntpoint-$((n++)); done
+  while [[ -e $mntpoint ]]; do mntpoint=$mntpoint-$((n++)); done
   mkdir -p "$mntpoint" || return 1
   case $fs in
     -t*sshfs) sshfs "$DEVNAME" "$mntpoint" $mntopts; echo "mount command: sshfs $DEVNAME $mntpoint $mntopts" ;;
