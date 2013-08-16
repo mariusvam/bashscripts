@@ -129,6 +129,8 @@ CHANGELOG
   - do not show mount dialog when tray is launch
   v0.4.4
   - fixed append number to mountpoint if it's already existed
+  v0.4.5
+  - reuse mountpoint
 
 COPYING
   Copyright (C) 2012 Tri Le <trile7 at gmail dot com>
