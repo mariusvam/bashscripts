@@ -1,0 +1,53 @@
+README for pdftools
+
+AUTHOR
+  Tri Le <trile7 at gmail dot com>
+
+SOURCE
+  tarball can be downloaded from http://code.google.com/p/bashscripts/downloads/list
+  scripts can be viewed at http://code.google.com/p/bashscripts/source/browse/trunk/pdftools
+  Arch https://aur.archlinux.org/packages/pdftools/
+
+DEPENDENCIES
+  coreutils, bash, ghostscript
+
+INSTALL
+  This installation procedure is for Arch's system.
+  - download aur PKGBUILD from http://aur.archlinux.org/packages/fi/pdftools/PKGBUILD
+  - in folder where PKGBUILD is stored, run "makepkg -i"
+
+FEATURE
+  - Merge multiple PDF files to one
+  - Split PDF file to individual pages
+  - Extract page or range of pages from a PDF file
+  - Convert PDF to JPG
+  - Convert PDF to text
+
+DESCRIPTION
+  PDF Merge.  Merge multiple PDF files to one.
+
+  PDF Slit.  Split all pages of a PDF file, one page per pdf file.
+
+  PDF Extract.  Extracts page or range of page from a PDF file.  Use "space" for separating individual page, "dash" for range of pages, and "end" for the last page of the file.  For example, to extract page 1, 3 to 5, 10 to the end of the file, enter: 1 3-5 10-end
+
+  PDF to JPG.  Convert pdf to image, one page per jpg file.
+
+  PDF to Text.  Convert text part of a pdf file to text.
+
+CHANGELOG
+
+
+COPYING
+  Copyright (C) 2014 Tri Le <trile7 at gmail dot com>
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation version 3.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
