@@ -15,7 +15,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 COMMENT
 
-version="pdftools v0.2.2"
+version="pdftools v0.2.3"
 blue='\e[0;34m'; green='\e[0;32m'; red='\e[0;31m'; yellow='\e[0;33m'; bold='\e[1m';none='\e[0m'
 
 function menu {
@@ -64,8 +64,8 @@ function merge {
   read -p "Enter merged pdf name (default merged.pdf): " f
   echo -e $none
   if [[ $f ]]; then
-    [[ $f != *.pdf ]] && $f=$f.pdf
-  else $f=merged.pdf
+    [[ $f != *.pdf ]] && f=$f.pdf
+  else f=merged.pdf
   fi
   [[ -e $f ]] && f=${f%.*}-`date +%s`.pdf
   mkdir -p `dirname "$f"`
