@@ -35,7 +35,8 @@ DESCRIPTION
   PDF to Text.  Convert text part of a pdf file to text.
 
 CHANGELOG
-
+v0.2.3
+- Fixed filename for merge operation
 
 COPYING
   Copyright (C) 2014 Tri Le <trile7 at gmail dot com>
