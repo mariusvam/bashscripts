@@ -17,24 +17,30 @@ COMMENT
 
 $fm_import
 if [[ -z $fm_pwd ]]; then
-  echo "This script is intended to be run with spacefm only."
-  exit 1
+ echo "This script is intended to be run with spacefm only."
+exit 1
 fi
-if [[ ${#fm_files[@]} -ge 2 ]]; then
-  newfile=${fm_value:=combined.pdf}
-  filename=`basename "$newfile"`
-  foldername=`dirname "$newfile"`
-  while [[ -e $newfile ]]; do
-    (( j++ ))
-    newfile=$foldername/$filename'_'$j
-    if [[ $j -gt 99 ]]; then
-      echo "Output file exists"
-      exit 1
-    fi
-  done
-  mkdir -p "$foldername"
-  gs -o -q -sDEVICE=pdfwrite -sOutputFile="$newfile" "${fm_files[@]}" && rm "${fm_files[@]}"
-else
-  echo "At least 2 PDF files are needed to merge."
-  exit 1
-fi
+   eval "`spacefm -g --label "Are you sure?" --button yes --button no`" #Confirmation dialog box
+   if [[ "$dialog_pressed" == "button1" ]]; then # "User pressed Yes - take some action"
+		if [[ ${#fm_files[@]} -ge 2 ]]; then
+		  eval "`spacefm -g --title 'New file name' --input "${fm_filename%%????}" --button Ok | grep 'dialog_input1='`" # New File Name dialog box, this command will assign the variable dialog_input1
+		  newfile=$dialog_input1".pdf"
+		  filename=`basename "$newfile"`
+		  foldername=`dirname "$newfile"`
+		  while [[ -e $newfile ]]; do
+		    (( j++ ))
+		    newfile=$foldername/$filename'_'$j
+		    if [[ $j -gt 99 ]]; then
+		      echo "Output file exists"
+		      exit 0
+		    fi
+		  done
+		  mkdir -p "$foldername"
+		  gs -o -q -sDEVICE=pdfwrite -sOutputFile="$newfile" "${fm_files[@]}" && rm "${fm_files[@]}"
+		else
+			eval "`spacefm -g --label "At least 2 PDF files are needed to merge." --button ok`" #Dialog box when only one file is chosen
+			exit 0
+		fi
+   else
+	 exit 0
+  fi
